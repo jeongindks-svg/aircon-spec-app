@@ -109,6 +109,27 @@ mark{background:color-mix(in srgb, var(--cool) 22%, transparent);color:inherit;b
 .sheet .actions{display:flex;gap:8px;margin-top:20px}
 .sheet .actions button{flex:1;height:46px;border-radius:12px;font-weight:600;border:1px solid var(--line)}
 .sheet .actions .primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.sheet .sub{font-size:13px;color:var(--muted);margin:0 0 12px;word-break:break-all}
+.newf{display:flex;gap:6px;margin-top:14px}
+.newf input{flex:1;min-width:0;height:42px;border:1.5px solid var(--line);border-radius:10px;padding:0 12px;font:inherit;font-size:15px;background:var(--surface);color:var(--ink)}
+.newf input:focus{outline:none;border-color:var(--ink)}
+.newf button{height:42px;padding:0 16px;border-radius:10px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);font-weight:600;flex:none}
+.chip.fold{display:inline-flex;align-items:center;gap:6px}
+.chip.fold .n{font-size:12px;color:var(--muted)}
+.chip[aria-pressed="true"] .n{color:inherit;opacity:.75}
+.chip.fold.check::before{content:'';width:14px;height:14px;border-radius:4px;border:1.5px solid currentColor;flex:none}
+.chip.fold.check[aria-pressed="true"]::before{background:currentColor;box-shadow:inset 0 0 0 2px var(--ink)}
+.fchips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:8px 16px 0}
+.fchips::-webkit-scrollbar{display:none}
+.fchips .chip{height:30px;font-size:13px;padding:0 11px}
+.fchips .manage{color:var(--cool);border-style:dashed}
+.mg-row{display:flex;gap:6px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.mg-row:first-child{border-top:0}
+.mg-row input{flex:1;min-width:0;height:40px;border:1.5px solid var(--line);border-radius:10px;padding:0 10px;font:inherit;font-size:15px;background:var(--surface);color:var(--ink)}
+.mg-row input:focus{outline:none;border-color:var(--ink)}
+.mg-row small{color:var(--muted);font-size:12px;flex:none;min-width:34px;text-align:right}
+.mg-row button{height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--line);color:var(--heat);font-weight:500;flex:none}
+.mg-empty{color:var(--muted);font-size:14px;padding:8px 0}
 
 .detail{position:fixed;inset:0;z-index:20;background:var(--bg);overflow:auto;transform:translateX(100%);
   transition:transform .25s ease;visibility:hidden}
@@ -147,6 +168,7 @@ dd .mm{color:var(--muted);font-weight:400}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;
   background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:50;transition:.2s;pointer-events:none}
 .toast.on{opacity:1;transform:translate(-50%,0)}
+.toast.top{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 16px)}
 @media (prefers-reduced-motion: reduce){ .sheet,.detail,.scrim,.toast{transition:none} }
 @media (min-width:720px){ main{padding:16px 0 40px} }
 
@@ -188,6 +210,7 @@ h1{white-space:nowrap}
       </button>
     </label>
     <div class="chips" id="cats" role="group" aria-label="분류"></div>
+    <div class="fchips" id="fchips" role="group" aria-label="즐겨찾기 폴더" hidden></div>
     <div class="meta-row"><span id="count"></span><button id="reset" hidden>필터 초기화</button></div>
   </div>
 </header>
@@ -217,6 +240,22 @@ h1{white-space:nowrap}
   </div>
   <div class="d-body" id="d-body"></div>
 </div>
+<div class="sheet" id="favsheet" role="dialog" aria-modal="true" aria-labelledby="favsheet-t">
+  <div class="grab"></div>
+  <h2 id="favsheet-t">즐겨찾기 폴더에 담기</h2>
+  <p class="sub" id="fs-model"></p>
+  <div class="opts" id="fs-folders"></div>
+  <div class="newf"><input id="fs-new" type="text" maxlength="20" placeholder="새 폴더 이름" aria-label="새 폴더 이름" enterkeyhint="done"><button id="fs-add">만들기</button></div>
+  <div class="actions"><button id="fs-remove">즐겨찾기 해제</button><button class="primary" id="fs-done">완료</button></div>
+</div>
+<div class="sheet" id="mgsheet" role="dialog" aria-modal="true" aria-labelledby="mgsheet-t">
+  <div class="grab"></div>
+  <h2 id="mgsheet-t">폴더 관리</h2>
+  <p class="sub">폴더 이름을 눌러 바로 고칠 수 있어요. 폴더를 지워도 다른 폴더에 담긴 모델은 그대로 남아요.</p>
+  <div id="mg-list"></div>
+  <div class="newf"><input id="mg-new" type="text" maxlength="20" placeholder="새 폴더 이름" aria-label="새 폴더 이름" enterkeyhint="done"><button id="mg-add">만들기</button></div>
+  <div class="actions"><button class="primary" id="mg-done">완료</button></div>
+</div>
 <div class="toast" id="toast" role="status"></div>
 
 <script>
@@ -238,7 +277,21 @@ const STAR = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor
 let FAV = new Set();
 try{ FAV = new Set(JSON.parse(localStorage.getItem('aircon-fav')||'[]')); }catch(e){}
 try{ const old = JSON.parse(localStorage.getItem('single-fav')||'[]'); old.forEach(id=>FAV.add('s:'+id)); }catch(e){}
-const saveFav = ()=>{ try{ localStorage.setItem('aircon-fav', JSON.stringify([...FAV])); localStorage.removeItem('single-fav'); }catch(e){} };
+/* 즐겨찾기 폴더: { folders:[{id,name}], items:{ 모델ID:[폴더ID,...] } } — 기기(브라우저)별 저장 */
+let FOLD = null, FAVF = null;
+try{ const j = JSON.parse(localStorage.getItem('aircon-favfolders')||'null'); if(j && Array.isArray(j.folders) && j.items) FOLD = j; }catch(e){}
+if(!FOLD){ FOLD = {folders:[{id:'f0',name:'기본'}], items:{}}; FAV.forEach(id=>{ FOLD.items[id]=['f0']; }); }
+const syncFAV = ()=>{ FAV = new Set(Object.keys(FOLD.items).filter(k=>(FOLD.items[k]||[]).length)); };
+syncFAV();
+const saveFav = ()=>{ syncFAV(); try{ localStorage.setItem('aircon-favfolders', JSON.stringify(FOLD)); localStorage.setItem('aircon-fav', JSON.stringify([...FAV])); localStorage.removeItem('single-fav'); }catch(e){} };
+saveFav();
+const folderOf = id => FOLD.items[id] || [];
+const inFolder = (id,f) => folderOf(id).includes(f);
+function newFolder(name){
+  name = String(name||'').trim().slice(0,20); if(!name) return null;
+  const ex = FOLD.folders.find(f=>f.name===name); if(ex) return ex;
+  const f = {id:'f'+Date.now().toString(36)+Math.random().toString(36).slice(2,5), name}; FOLD.folders.push(f); saveFav(); return f;
+}
 
 /* ================= SINGLE ================= */
 const S_CATS = [['all','전체'],['windfree_1way_cassette','무풍 1Way'],['windfree_4way_cassette','무풍 4Way'],['360_cassette','360 카세트'],['duct','덕트'],['ceiling','실링'],['pac','PAC(스탠드)']];
@@ -554,7 +607,7 @@ function hl(text){
 function filtered(){
   const st=M.state, toks=tokens();
   const out = M.data.filter(r=>{
-    if(st.favOnly && !FAV.has(r._id)) return false;
+    if(st.favOnly && (!FAV.has(r._id) || (FAVF && !inFolder(r._id,FAVF)))) return false;
     if(st.cat!=='all' && !M.inCat(r,st.cat)) return false;
     for(const g of M.groups){
       const v=st.f[g.id];
@@ -573,9 +626,10 @@ function render(){
   $('#reset').hidden = !(st.q || st.cat!=='all' || activeCount() || st.favOnly);
   $('#clear').hidden = !st.q;
   if(!rows.length){
-    const noFav = st.favOnly && ![...FAV].some(id=>id.startsWith(M.key+':'));
-    $('#list').innerHTML = `<div class="empty"><strong>${noFav?'즐겨찾기한 모델이 없어요':'조건에 맞는 모델이 없어요'}</strong>
-      ${noFav?'모델 옆의 별을 눌러 자주 보는 모델을 모아 두세요.':(M!==SINGLE?'모델명 일부(예: AM200, AJ020)나 마력(예: 20HP), 능력(예: 14.5kW)으로 검색해 보세요.':'모델명 일부(예: 110, CN4)나 능력(예: 11kW)으로 검색해 보세요.')}
+    const noFav = st.favOnly && !M.data.some(r=>FAV.has(r._id) && (!FAVF || inFolder(r._id,FAVF)));
+    const fname = FAVF && (FOLD.folders.find(f=>f.id===FAVF)||{}).name;
+    $('#list').innerHTML = `<div class="empty"><strong>${noFav?(fname?`'${esc(fname)}' 폴더가 비어 있어요`:'즐겨찾기한 모델이 없어요'):'조건에 맞는 모델이 없어요'}</strong>
+      ${noFav?'모델 옆의 별을 누르면 원하는 폴더에 담을 수 있어요.':(M!==SINGLE?'모델명 일부(예: AM200, AJ020)나 마력(예: 20HP), 능력(예: 14.5kW)으로 검색해 보세요.':'모델명 일부(예: 110, CN4)나 능력(예: 11kW)으로 검색해 보세요.')}
       <br><button id="empty-reset">필터 초기화</button></div>`;
     $('#empty-reset').onclick = resetAll;
   } else {
@@ -591,6 +645,17 @@ function renderCats(){
     `<button class="chip filter-btn" id="open-f" aria-haspopup="dialog"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>필터${n?`<span class="count">${n}</span>`:''}</button>` +
     `<button class="chip" data-fav aria-pressed="${st.favOnly}">★ 즐겨찾기</button>` +
     M.cats.map(([k,l])=>`<button class="chip" data-cat="${k}" aria-pressed="${st.cat===k}">${l}</button>`).join('');
+  renderFolderChips();
+}
+function renderFolderChips(){
+  const st=M.state, box=$('#fchips');
+  box.hidden = !st.favOnly;
+  if(!st.favOnly) return;
+  if(FAVF && !FOLD.folders.some(f=>f.id===FAVF)) FAVF=null;
+  const cnt = f => M.data.reduce((n,r)=>n+(FAV.has(r._id) && (!f || inFolder(r._id,f)) ? 1 : 0),0);
+  box.innerHTML = `<button class="chip fold" data-folder="" aria-pressed="${!FAVF}">전체 <span class="n">${cnt(null)}</span></button>` +
+    FOLD.folders.map(f=>`<button class="chip fold" data-folder="${esc(f.id)}" aria-pressed="${FAVF===f.id}">${esc(f.name)} <span class="n">${cnt(f.id)}</span></button>`).join('') +
+    `<button class="chip manage" id="open-mg" aria-haspopup="dialog">폴더 관리</button>`;
 }
 function setMode(k, keepScroll){
   M = MODES[k];
@@ -601,7 +666,7 @@ function setMode(k, keepScroll){
   render(); if(!keepScroll) window.scrollTo(0,0);
 }
 function resetAll(){
-  const st=M.state; st.q=''; $('#q').value=''; st.cat='all'; st.favOnly=false;
+  const st=M.state; st.q=''; $('#q').value=''; st.cat='all'; st.favOnly=false; FAVF=null;
   M.groups.forEach(g=>st.f[g.id] = g.single?null:new Set());
   render(); renderFilter();
 }
@@ -617,7 +682,76 @@ function renderFilter(){
   }).join('') + `<h3>정렬</h3><div class="opts">${M.sorts.map(([k,l])=>`<button class="chip" data-g="__sort" data-v="${k}" aria-pressed="${st.sort===k}">${l}</button>`).join('')}</div>`;
 }
 function openSheet(){ renderFilter(); $('#scrim').classList.add('on'); $('#fsheet').classList.add('on'); }
-function closeSheet(){ $('#scrim').classList.remove('on'); $('#fsheet').classList.remove('on'); }
+function closeSheet(){ $('#scrim').classList.remove('on'); ['#fsheet','#favsheet','#mgsheet'].forEach(x=>$(x).classList.remove('on')); }
+const anySheet = ()=> ['#fsheet','#favsheet','#mgsheet'].some(x=>$(x).classList.contains('on'));
+/* 즐겨찾기 폴더 시트 */
+let favTarget = null;
+function openFavSheet(id){
+  favTarget = id;
+  if(!FOLD.folders.length) newFolder('기본');
+  const r = ALL.find(x=>x._id===id);
+  $('#fs-model').textContent = r ? (r._id.startsWith('m:') ? MULTI : SINGLE).title(r) : '';
+  $('#fs-new').value=''; renderFavSheet();
+  $('#scrim').classList.add('on'); $('#favsheet').classList.add('on');
+}
+function renderFavSheet(){
+  const cur = folderOf(favTarget);
+  $('#fs-folders').innerHTML = FOLD.folders.map(f=>`<button class="chip fold check" data-tog="${esc(f.id)}" aria-pressed="${cur.includes(f.id)}">${esc(f.name)}</button>`).join('');
+  $('#fs-remove').disabled = !cur.length; $('#fs-remove').style.opacity = cur.length?1:.4;
+}
+function afterFavChange(){
+  saveFav(); render();
+  if(current) $('#d-star').setAttribute('aria-pressed', FAV.has(current._id));
+}
+$('#fs-folders').addEventListener('click',e=>{
+  const b=e.target.closest('[data-tog]'); if(!b||!favTarget) return;
+  const arr = folderOf(favTarget).slice(), f=b.dataset.tog, i=arr.indexOf(f);
+  i>=0 ? arr.splice(i,1) : arr.push(f);
+  if(arr.length) FOLD.items[favTarget]=arr; else delete FOLD.items[favTarget];
+  renderFavSheet(); afterFavChange();
+});
+function addFromInput(inp, then){
+  const name = inp.value.trim(); if(!name){ inp.focus(); return; }
+  const f = newFolder(name); inp.value=''; if(f) then(f);
+}
+$('#fs-add').onclick = ()=> addFromInput($('#fs-new'), f=>{
+  const arr = folderOf(favTarget).slice(); if(!arr.includes(f.id)) arr.push(f.id); FOLD.items[favTarget]=arr;
+  renderFavSheet(); afterFavChange(); toast(`'${f.name}' 폴더에 담았어요`);
+});
+$('#fs-new').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); $('#fs-add').click(); } });
+$('#fs-remove').onclick = ()=>{ if(!favTarget) return; delete FOLD.items[favTarget]; afterFavChange(); closeSheet(); toast('즐겨찾기에서 뺐어요'); };
+$('#fs-done').onclick = closeSheet;
+/* 폴더 관리 시트 */
+function openManage(){ $('#mg-new').value=''; renderManage(); $('#scrim').classList.add('on'); $('#mgsheet').classList.add('on'); }
+function renderManage(){
+  const cnt = f => Object.values(FOLD.items).filter(a=>a.includes(f)).length;
+  $('#mg-list').innerHTML = FOLD.folders.length ? FOLD.folders.map(f=>`<div class="mg-row"><input value="${esc(f.name)}" maxlength="20" data-ren="${esc(f.id)}" aria-label="폴더 이름"><small>${cnt(f.id)}개</small><button data-del="${esc(f.id)}">삭제</button></div>`).join('')
+    : '<p class="mg-empty">폴더가 없어요. 아래에서 새 폴더를 만들어 보세요.</p>';
+}
+$('#mg-list').addEventListener('change',e=>{
+  const inp=e.target.closest('[data-ren]'); if(!inp) return;
+  const f=FOLD.folders.find(x=>x.id===inp.dataset.ren), name=inp.value.trim().slice(0,20);
+  if(f && name){ f.name=name; saveFav(); render(); } else if(f){ inp.value=f.name; }
+});
+$('#mg-list').addEventListener('keydown',e=>{ if(e.key==='Enter' && e.target.matches('[data-ren]')) e.target.blur(); });
+$('#mg-list').addEventListener('click',e=>{
+  const b=e.target.closest('[data-del]'); if(!b) return;
+  const f=FOLD.folders.find(x=>x.id===b.dataset.del); if(!f) return;
+  const n=Object.values(FOLD.items).filter(a=>a.includes(f.id)).length;
+  if(!confirm(`'${f.name}' 폴더를 지울까요?`+(n?`\n이 폴더에만 담긴 모델은 즐겨찾기에서 빠져요.`:''))) return;
+  FOLD.folders = FOLD.folders.filter(x=>x.id!==f.id);
+  Object.keys(FOLD.items).forEach(k=>{ FOLD.items[k]=FOLD.items[k].filter(x=>x!==f.id); if(!FOLD.items[k].length) delete FOLD.items[k]; });
+  if(FAVF===f.id) FAVF=null;
+  saveFav(); renderManage(); render(); toast('폴더를 지웠어요');
+});
+$('#mg-add').onclick = ()=> addFromInput($('#mg-new'), f=>{ renderManage(); render(); toast(`'${f.name}' 폴더를 만들었어요`); });
+$('#mg-new').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); $('#mg-add').click(); } });
+$('#mg-done').onclick = closeSheet;
+$('#fchips').addEventListener('click',e=>{
+  if(e.target.closest('#open-mg')) return openManage();
+  const b=e.target.closest('[data-folder]'); if(!b) return;
+  FAVF = b.dataset.folder || null; render(); window.scrollTo(0,0);
+});
 $('#fsheet').addEventListener('click',e=>{
   const b=e.target.closest('[data-g]'); if(!b) return;
   const st=M.state, gid=b.dataset.g, raw=b.dataset.v;
@@ -675,9 +809,9 @@ $('#d-nav').addEventListener('click',e=>{
   const el=document.getElementById('sec-'+a.dataset.jump);
   $('#detail').scrollTo({top:el.offsetTop-$('.d-head').offsetHeight-8, behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
 });
-$('#d-star').onclick = ()=>{ if(!current) return; toggleFav(current._id); $('#d-star').setAttribute('aria-pressed',FAV.has(current._id)); };
-function toggleFav(id){ FAV.has(id)?FAV.delete(id):FAV.add(id); saveFav(); toast(FAV.has(id)?'즐겨찾기에 추가했어요':'즐겨찾기에서 뺐어요'); render(); }
-let tt; function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('on'); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('on'),1600); }
+$('#d-star').onclick = ()=>{ if(!current) return; openFavSheet(current._id); };
+function toggleFav(id){ openFavSheet(id); }
+let tt; function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.toggle('top', anySheet()); t.classList.add('on'); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('on'),1600); }
 
 /* events */
 let qt;
@@ -688,7 +822,7 @@ $('#reset').onclick = resetAll;
 document.querySelector('.seg').addEventListener('click',e=>{ const b=e.target.closest('[data-mode]'); if(b && MODES[b.dataset.mode]!==M) setMode(b.dataset.mode); });
 $('#cats').addEventListener('click',e=>{
   if(e.target.closest('#open-f')) return openSheet();
-  if(e.target.closest('[data-fav]')){ M.state.favOnly=!M.state.favOnly; render(); return; }
+  if(e.target.closest('[data-fav]')){ M.state.favOnly=!M.state.favOnly; if(!M.state.favOnly) FAVF=null; render(); return; }
   const b=e.target.closest('[data-cat]'); if(!b) return;
   M.state.cat=b.dataset.cat; render(); window.scrollTo(0,0);
 });
@@ -698,7 +832,7 @@ $('#list').addEventListener('click',e=>{
   const r=M.data.find(x=>x._id===c.dataset.id); if(r) openDetail(r);
 });
 $('#list').addEventListener('keydown',e=>{ if((e.key==='Enter'||e.key===' ') && e.target.classList.contains('card')){ e.preventDefault(); e.target.click(); } });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if($('#fsheet').classList.contains('on')) closeSheet(); else if(current) $('#d-back').click(); } });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(anySheet()) closeSheet(); else if(current) $('#d-back').click(); } });
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
 setMode(M.key, true);
