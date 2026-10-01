@@ -313,7 +313,7 @@ details.miss p{margin:6px 0 0;line-height:1.6}
       <button class="icon-btn" id="c-back" aria-label="뒤로"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 5l-7 7 7 7"/></svg></button>
       <div class="t" id="c-title">모델 비교</div>
     </div>
-    <div class="cmp-tools"><button class="chip" id="c-diff" aria-pressed="true">다른 값만 보기</button><button class="chip" id="c-pdf">PDF 공유</button></div>
+    <div class="cmp-tools"><button class="chip" id="c-diff" aria-pressed="true">다른 값만 보기</button><button class="chip" id="c-pdf">PDF</button></div>
     <div class="cmp-cols" id="c-cols"></div>
   </div>
   <div class="d-body" id="c-body"></div>
@@ -328,7 +328,7 @@ details.miss p{margin:6px 0 0;line-height:1.6}
   <div class="grab"></div>
   <h2 id="pdfsheet-t">PDF가 준비됐어요</h2>
   <p class="sub" id="pdf-name"></p>
-  <div class="actions"><button id="pdf-save">저장</button><button class="primary" id="pdf-share">공유</button></div>
+  <div class="actions"><button id="pdf-save">다운로드</button><button class="primary" id="pdf-share">공유</button></div>
 </div>
 
 
@@ -368,7 +368,7 @@ function newFolder(name){
 }
 
 /* ================= v1.0 공통 ================= */
-const APP_VERSION = '1.0.1', DATA_DATE = '2026-10-01';
+const APP_VERSION = '1.1', DATA_DATE = '2026-10-01';
 let CMP = [];
 const srcTag = r => r.source_kind==='catalog2018' ? '카탈로그 2018' : r.source_kind==='catalog' ? '카탈로그' : r.source_kind==='xls' ? (/^DVM Pro/.test(r.source_doc||'') ? 'DVM Pro 2.0' : '사양서') : 'TDB';
 const cellText = el => { if(!el) return ''; const t=document.createElement('div'); t.innerHTML=el.innerHTML.replace(/<br\s*\/?>/gi,'\n').replace(/<wbr>/gi,''); return t.textContent.replace(/[ \t\u00a0]+/g,' ').replace(/ ?\n ?/g,'\n').trim(); };
@@ -944,7 +944,7 @@ function openDetail(r, push=true){
   $('#d-body').innerHTML = `<div class="hero">${mode.hero(r)}
       <div class="hbtns">
       <button class="copy" id="copy-btn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>모델명 복사</button>
-      <button class="copy" id="pdf-btn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V4M8 8l4-4 4 4M5 14v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5"/></svg>PDF 공유</button>
+      <button class="copy" id="pdf-btn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V4M8 8l4-4 4 4M5 14v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5"/></svg>PDF</button>
       <button class="copy" id="cmp-btn">${CMP.includes(r._id)?'비교에서 빼기':'비교 담기'}</button></div></div>
     ${notesOf(r).map(([b,t])=>`<p class="lite-note">${b?`<b>${esc(b)}</b> · `:''}${esc(t)}</p>`).join('')}
     ${secs.map(s=>`<section class="sec" id="sec-${s.id}"><h2>${s.title}</h2>${s.html}</section>`).join('') || '<p class="lite-note">엑셀에도 모델명과 제품 종류 외에는 적힌 값이 없어요.</p>'}
@@ -1210,10 +1210,6 @@ async function makeAndShare(kind){
 async function deliverPdf(blob,name){
   const file=new File([blob],name,{type:'application/pdf'});
   const canShare = !!(navigator.canShare && navigator.canShare({files:[file]}));
-  if(canShare){
-    try{ await navigator.share({files:[file],title:name.replace(/\.pdf$/,'')}); return; }
-    catch(e){ if(e && e.name==='AbortError') return; }
-  }
   pdfPending={blob,name,file,canShare};
   $('#pdf-name').textContent=name; $('#pdf-share').hidden=!canShare;
   $('#scrim').classList.add('on'); $('#pdfsheet').classList.add('on');
@@ -1221,13 +1217,13 @@ async function deliverPdf(blob,name){
 $('#pdf-share').onclick = async ()=>{
   if(!pdfPending) return;
   try{ await navigator.share({files:[pdfPending.file],title:pdfPending.name.replace(/\.pdf$/,'')}); closeSheet(); }
-  catch(e){ if(!(e && e.name==='AbortError')) toast('공유할 수 없어요. 저장을 눌러 주세요'); }
+  catch(e){ if(!(e && e.name==='AbortError')) toast('공유할 수 없어요. 다운로드를 눌러 주세요'); }
 };
 $('#pdf-save').onclick = ()=>{
   if(!pdfPending) return;
   const url=URL.createObjectURL(pdfPending.blob), a=document.createElement('a');
   a.href=url; a.download=pdfPending.name; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),60000); closeSheet(); toast('PDF를 저장했어요');
+  setTimeout(()=>URL.revokeObjectURL(url),60000); closeSheet(); toast('PDF를 다운로드했어요');
 };
 
 /* ================= 정보 ================= */
