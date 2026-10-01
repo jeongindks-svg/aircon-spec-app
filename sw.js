@@ -1,6 +1,6 @@
 /* 시스템 에어컨 규격 검색 — service worker
    데이터나 화면을 바꿀 때마다 VERSION을 올려야 사용자 기기의 캐시가 새로 받아집니다. */
-const VERSION = 'aircon-spec-2026-10-01g';
+const VERSION = 'aircon-spec-v1.0.1';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
