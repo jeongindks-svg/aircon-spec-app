@@ -160,6 +160,20 @@ dl{margin:0;background:var(--surface);border:1px solid var(--line);border-radius
 dl .r{display:grid;grid-template-columns:minmax(110px,40%) 1fr;gap:10px;padding:10px 12px;border-top:1px solid var(--line)}
 dl .r:first-child,dl .r.cont{border-top:0}
 dl .r.cont{padding-top:0}
+dl .r.hl{background:#FFF3A8;box-shadow:inset 4px 0 0 #F2B600}
+dl .r.hl dt{color:#5A4500;font-weight:700}
+dl .r.hl dd{color:#1B1B1B;font-weight:700}
+dl .r.hl dd .u,dl .r.hl dd .mm{color:#6B5A1E}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) dl .r.hl{background:#4A3F0E;box-shadow:inset 4px 0 0 #E8B923}
+  :root:not([data-theme="light"]) dl .r.hl dt{color:#F3DE8A}
+  :root:not([data-theme="light"]) dl .r.hl dd{color:#FFF6CC}
+  :root:not([data-theme="light"]) dl .r.hl dd .u,:root:not([data-theme="light"]) dl .r.hl dd .mm{color:#D9C676}
+}
+:root[data-theme="dark"] dl .r.hl{background:#4A3F0E;box-shadow:inset 4px 0 0 #E8B923}
+:root[data-theme="dark"] dl .r.hl dt{color:#F3DE8A}
+:root[data-theme="dark"] dl .r.hl dd{color:#FFF6CC}
+:root[data-theme="dark"] dl .r.hl dd .u,:root[data-theme="dark"] dl .r.hl dd .mm{color:#D9C676}
 dt{color:var(--muted);font-size:13.5px}
 dd{margin:0;font-size:14.5px;font-weight:500;word-break:break-word}
 dd .u{color:var(--muted);font-weight:400;font-size:12.5px;margin-left:2px}
@@ -1030,12 +1044,14 @@ $('#scrim').onclick = closeSheet;
 
 /* detail */
 let current=null;
+/* 자주 보는 항목(형광펜 강조): 소비전력·저온난방·전원사양·차단기·전원선·액관·가스관·제품 치수 */
+const HL_RE=/소비전력|저온\s*난방|전원사양|차단기|전원선|전원배선 규격|액관|가스관|^제품 치수/;
 function detailParts(r){
   const mode = r._id.startsWith('m:') ? MULTI : SINGLE;
   const liteDefs = r.info_level==='lite' ? [['lite','엑셀 기재 정보',(r.lite_rows||[]).map(([l,u,v])=>[l,()=>esc(v)+(u?U(u):'')])]] : null;
   const secs = (liteDefs || (mode.sectionsFor ? mode.sectionsFor(r) : mode.sections)).map(([id,title0,rows,custom])=>{
     const title = typeof title0==='function' ? title0(r) : title0;
-    const html = custom ? custom(r) : (()=>{ const h=rows.map(([l0,f])=>{ const v=f(r); const l=typeof l0==='function'?l0(r):l0; return v==null?'':`<div class="r${l?'':' cont'}"><dt>${l}</dt><dd>${v}</dd></div>`; }).join(''); return h?`<dl>${h}</dl>`:null; })();
+    const html = custom ? custom(r) : (()=>{ const h=rows.map(([l0,f])=>{ const v=f(r); const l=typeof l0==='function'?l0(r):l0; return v==null?'':`<div class="r${l?'':' cont'}${HL_RE.test(String(l).replace(/<[^>]*>/g,''))?' hl':''}"><dt>${l}</dt><dd>${v}</dd></div>`; }).join(''); return h?`<dl>${h}</dl>`:null; })();
     return html ? {id,title,html:custom?`<dl>${html}</dl>`:html} : null;
   }).filter(Boolean);
   return {mode,secs};
