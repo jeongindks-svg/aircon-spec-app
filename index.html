@@ -464,7 +464,7 @@ function newFolder(name){
 }
 
 /* ================= v1.0 공통 ================= */
-const APP_VERSION = '1.8', DATA_DATE = '2026-10-01';
+const APP_VERSION = '1.9', DATA_DATE = '2026-10-01';
 let CMP = [];
 const srcTag = r => r.source_kind==='catalog2018' ? '카탈로그 2018' : r.source_kind==='catalog' ? '카탈로그' : r.source_kind==='xls' ? (/^DVM Pro/.test(r.source_doc||'') ? 'DVM Pro 2.0' : '사양서') : 'TDB';
 const heroOf = (r,mode)=>{ let h=mode.hero(r); const t=(r.discontinued?`<span class="tag stop">${esc(r.discontinued)}</span>`:'')+(r.legacy?'<span class="tag lite">이전 모델</span>':''); if(t) h=h.replace('<div class="tags">',`<div class="tags">${t}`); return h; };
@@ -795,7 +795,7 @@ function iduSections(r){
     let prev=null;
     return g.rows.map(([lab,unit,v])=>{ const same=lab===prev; prev=lab;
       const u = unit && unit!=='-' ? U(esc(unit)) : '';
-      return `<div class="r${same?' cont':''}"><dt>${same?'':esc(lab)}</dt><dd>${esc(v)}${u}</dd></div>`; }).join('');
+      return `<div class="r${same?' cont':''}${!same&&isHLIdu(g.title,lab)?' hl':''}"><dt>${same?'':esc(lab)}</dt><dd>${esc(v)}${u}</dd></div>`; }).join('');
   }]);
 }
 function findModule(model, parent){
@@ -1044,14 +1044,27 @@ $('#scrim').onclick = closeSheet;
 
 /* detail */
 let current=null;
-/* 자주 보는 항목(형광펜 강조): 소비전력·저온난방·전원사양·차단기·전원선·액관·가스관·제품 치수 */
-const HL_RE=/소비전력|저온\s*난방|전원사양|차단기|전원선|전원배선 규격|액관|가스관|^제품 치수/;
+/* 자주 보는 항목(형광펜 강조). 구역(id)별로 다르게: 실외기 '전력·효율'은 저온 난방 소비전력만, '성능'의 저온난방은 강조 안 함 */
+const HL_RE=/소비전력|전원사양|차단기|전원선|전원배선 규격|액관|가스관|^제품 치수/;
+const HL_LOWTEMP=/저온\s*난방 소비전력/;
+function isHL(mode,secId,label){
+  const l=String(label||'').replace(/<[^>]*>/g,'');
+  if(mode===MULTI && secId==='eff') return HL_LOWTEMP.test(l);
+  if(mode===SINGLE && secId==='panel' && l==='모델명') return true;
+  return HL_RE.test(l);
+}
+/* 실내기(엑셀 행 목록) 강조: 액관·가스관·판넬 모델·제품 치수(실내기/판넬) */
+function isHLIdu(sec,label){
+  if(/액관|가스관/.test(label)) return true;
+  if(/제품\s*치수/.test(label)) return true;
+  return /판넬/.test(sec) && /^(모델명?|판넬 모델)$/.test(label);
+}
 function detailParts(r){
   const mode = r._id.startsWith('m:') ? MULTI : SINGLE;
   const liteDefs = r.info_level==='lite' ? [['lite','엑셀 기재 정보',(r.lite_rows||[]).map(([l,u,v])=>[l,()=>esc(v)+(u?U(u):'')])]] : null;
   const secs = (liteDefs || (mode.sectionsFor ? mode.sectionsFor(r) : mode.sections)).map(([id,title0,rows,custom])=>{
     const title = typeof title0==='function' ? title0(r) : title0;
-    const html = custom ? custom(r) : (()=>{ const h=rows.map(([l0,f])=>{ const v=f(r); const l=typeof l0==='function'?l0(r):l0; return v==null?'':`<div class="r${l?'':' cont'}${HL_RE.test(String(l).replace(/<[^>]*>/g,''))?' hl':''}"><dt>${l}</dt><dd>${v}</dd></div>`; }).join(''); return h?`<dl>${h}</dl>`:null; })();
+    const html = custom ? custom(r) : (()=>{ const h=rows.map(([l0,f])=>{ const v=f(r); const l=typeof l0==='function'?l0(r):l0; return v==null?'':`<div class="r${l?'':' cont'}${isHL(mode,id,l)?' hl':''}"><dt>${l}</dt><dd>${v}</dd></div>`; }).join(''); return h?`<dl>${h}</dl>`:null; })();
     return html ? {id,title,html:custom?`<dl>${html}</dl>`:html} : null;
   }).filter(Boolean);
   return {mode,secs};
@@ -1387,6 +1400,7 @@ $('#info-done').onclick = closeSheet;
 
 /* ================= 업데이트 내역 ================= */
 const CHANGELOG = [
+  {v:'v1.9', d:'2026-10-07', t:['형광펜 강조 조정: 실내기는 액관·가스관·판넬·제품 치수(실내기/판넬)를 강조하고, 실외기 \'전력·효율\'은 저온 난방 소비전력(-15℃)만 강조해요. \'성능\'의 저온난방은 강조를 풀었어요']},
   {v:'v1.8', d:'2026-10-07', t:['상세 화면에서 자주 보는 항목을 노란 형광펜으로 강조: 소비전력, 저온난방, 전원사양, 차단기, 전원선, 액관, 가스관, 제품 치수']},
   {v:'v1.7', d:'2026-10-01', t:['4Way 카세트를 단순화: 고효율 무풍 4Way, 무풍 4Way(NN4 시리즈), 600×600 계열(AM032NNNDBH1 등)을 \'그 외\'로 이동 (필터의 \'자주 쓰지 않는 라인업\'과 메뉴의 \'그 외\')','메뉴의 4Way·1Way 목록은 자주 쓰는 라인업만 먼저 보이고 나머지는 \'그 외\'를 눌러 펼쳐요','실내기 목록에서도 600×600 계열은 \'그 외\' 중에서 맨 뒤로 보내요']},
   {v:'v1.6', d:'2026-10-01', t:['실내기를 시리즈별로 묶어서 보여줘요: AM052BN4DBH1 다음은 같은 시리즈의 AM060BN4DBH1, AM072BN4DBH1… 처럼 용량이 올라가고, 필터로 좁혀도 같아요','무풍 4Way 카세트 NN4 시리즈(8개)와 600×600 NNN 시리즈(4개)를 이전 모델로 표시','이전 모델은 목록에서 같은 종류 안의 맨 뒤로 보내요']},
