@@ -62,6 +62,7 @@ h1{font-size:17px;font-weight:700;margin:0;letter-spacing:-0.01em}
 .chips::-webkit-scrollbar{display:none}
 .chip{flex:none;height:34px;padding:0 13px;border-radius:17px;border:1px solid var(--line);background:var(--surface);
   font-size:14px;font-weight:500;white-space:nowrap}
+.chip:disabled{opacity:.35;cursor:not-allowed;text-decoration:line-through}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .chip.filter-btn{display:inline-flex;align-items:center;gap:6px}
 .chip .count{min-width:18px;height:18px;border-radius:9px;background:var(--cool);color:#fff;font-size:11px;
@@ -492,7 +493,7 @@ function newFolder(name){
 }
 
 /* ================= v1.0 공통 ================= */
-const APP_VERSION = '2.1', DATA_DATE = '2026-10-01';
+const APP_VERSION = '2.2', DATA_DATE = '2026-10-01';
 let CMP = [];
 const srcTag = r => r.source_kind==='catalog2018' ? '카탈로그 2018' : r.source_kind==='catalog' ? '카탈로그' : r.source_kind==='xls' ? (/^DVM Pro/.test(r.source_doc||'') ? 'DVM Pro 2.0' : '사양서') : 'TDB';
 const heroOf = (r,mode)=>{ let h=mode.hero(r); const t=(r.discontinued?`<span class="tag stop">${esc(r.discontinued)}</span>`:'')+(r.legacy?'<span class="tag lite">이전 모델</span>':''); if(t) h=h.replace('<div class="tags">',`<div class="tags">${t}`); return h; };
@@ -905,20 +906,24 @@ function hl(text){
   });
   return s;
 }
+/* skip: 이 필터 그룹은 빼고 나머지 조건만 적용 (필터 화면에서 '고를 수 있는 선택지'를 계산할 때 사용) */
+function passes(r,toks,rg,skip){
+  const st=M.state;
+  if(st.favOnly && (!FAV.has(r._id) || (FAVF && !inFolder(r._id,FAVF)))) return false;
+  if(r.discontinued && st.cat!=='disc') return false; /* 생산단종은 메뉴 '기타 > 생산단종'에서만 */
+  if(st.cat!=='all' && !M.inCat(r,st.cat)) return false;
+  for(const g of M.groups){
+    if(g.id===skip) continue;
+    const v=st.f[g.id];
+    if(g.single){ if(v!=null && !g.test(r,v)) return false; }
+    else if(v.size && ![...v].some(x=>g.test(r,x))) return false;
+  }
+  if(rg.length && !rg.every(g=>inRange(r,g))) return false;
+  return toks.every(t=>M.token(r,t));
+}
 function filtered(){
   const st=M.state, toks=tokens(), rg=parseQuery(st.q).ranges;
-  const out = M.data.filter(r=>{
-    if(st.favOnly && (!FAV.has(r._id) || (FAVF && !inFolder(r._id,FAVF)))) return false;
-    if(r.discontinued && st.cat!=='disc') return false; /* 생산단종은 메뉴 '기타 > 생산단종'에서만 */
-    if(st.cat!=='all' && !M.inCat(r,st.cat)) return false;
-    for(const g of M.groups){
-      const v=st.f[g.id];
-      if(g.single){ if(v!=null && !g.test(r,v)) return false; }
-      else if(v.size && ![...v].some(x=>g.test(r,x))) return false;
-    }
-    if(rg.length && !rg.every(g=>inRange(r,g))) return false;
-    return toks.every(t=>M.token(r,t));
-  });
+  const out = M.data.filter(r=>passes(r,toks,rg,null));
   const s = M.sorts.find(x=>x[0]===st.sort) || M.sorts[0];
   return out.sort(s[2]);
 }
@@ -979,9 +984,13 @@ function resetAll(){
 /* filter sheet */
 function renderFilter(){
   const st=M.state;
+  const toks=tokens(), rg=parseQuery(st.q).ranges;
   $('#fgroups').innerHTML = M.groups.map(g=>{
     const v=st.f[g.id];
-    const btn=([ov,l])=>`<button class="chip" data-g="${g.id}" data-v="${esc(ov)}" aria-pressed="${g.single? v===ov : v.has(ov)}">${esc(l)}</button>`;
+    /* 지금 고른 조건에서 결과가 하나도 없는 선택지는 비활성화 (이미 고른 것은 해제할 수 있게 유지) */
+    const base=M.data.filter(r=>passes(r,toks,rg,g.id));
+    const btn=([ov,l])=>{ const on=g.single? v===ov : v.has(ov); const ok=on||base.some(r=>g.test(r,ov));
+      return `<button class="chip" data-g="${g.id}" data-v="${esc(ov)}" aria-pressed="${on}"${ok?'':' disabled'}>${esc(l)}</button>`; };
     const all=g.single?[`<button class="chip" data-g="${g.id}" data-v="" aria-pressed="${v==null}">전체</button>`]:[];
     if(!g.common) return `<h3>${g.title}</h3><div class="opts">${all.concat(g.opts.map(btn)).join('')}</div>`;
     const top=g.common.map(c=>g.opts.find(o=>o[0]===c)).filter(Boolean), rest=g.opts.filter(o=>!g.common.includes(o[0]));
@@ -1436,6 +1445,7 @@ $('#info-done').onclick = closeSheet;
 
 /* ================= 업데이트 내역 ================= */
 const CHANGELOG = [
+  {v:'v2.2', d:'2026-10-14', t:['필터 화면에서 지금 고른 조건으로 결과가 없는 선택지는 흐리게 막아서, 누를수록 나오는 것만 고를 수 있어요 (이미 고른 것은 눌러서 해제 가능)']},
   {v:'v2.1', d:'2026-10-14', t:['실내기 상세에 \'WiFi 내장 · SmartThings 앱 지원\' 행 추가 (카탈로그에 표기된 58개 모델)','기타 제품 19개 추가: 전열교환기 11개(주거용 4·상업용 7), 시스템제습기 AY047BA1SBA, DVM Chiller 펌프내장형 AG020KSVGHH1PP, 상업용 EHS 싱글형 AE350NSBFHB1SY, 콜드체인 콘덴싱유닛 5개 (분류 칩 \'기타 제품\', 메뉴 \'기타 제품\')','메뉴(☰) 기타에 \'부자재\' 추가 (판넬·분기관·헤더·Kit·Drain Pump·리모컨·중앙제어 등 119개, 모델명 누르면 복사)']},
   {v:'v2.0', d:'2026-10-14', t:['앱을 켜면 항상 \'통합 · 전체\' 화면에서 시작해요','생산단종 모델은 목록·검색·필터·메뉴 숫자에서 빼고, 메뉴(☰)의 \'기타 > 생산단종\'에서만 볼 수 있어요 (분류 칩의 \'생산단종\'도 없앴어요)']},
   {v:'v1.9', d:'2026-10-07', t:['형광펜 강조 조정: 실내기는 액관·가스관·판넬·제품 치수(실내기/판넬)를 강조하고, 실외기 \'전력·효율\'은 저온 난방 소비전력(-15℃)만 강조해요. \'성능\'의 저온난방은 강조를 풀었어요']},
