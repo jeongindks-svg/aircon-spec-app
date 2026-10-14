@@ -464,7 +464,7 @@ function newFolder(name){
 }
 
 /* ================= v1.0 공통 ================= */
-const APP_VERSION = '1.9', DATA_DATE = '2026-10-01';
+const APP_VERSION = '2.0', DATA_DATE = '2026-10-01';
 let CMP = [];
 const srcTag = r => r.source_kind==='catalog2018' ? '카탈로그 2018' : r.source_kind==='catalog' ? '카탈로그' : r.source_kind==='xls' ? (/^DVM Pro/.test(r.source_doc||'') ? 'DVM Pro 2.0' : '사양서') : 'TDB';
 const heroOf = (r,mode)=>{ let h=mode.hero(r); const t=(r.discontinued?`<span class="tag stop">${esc(r.discontinued)}</span>`:'')+(r.legacy?'<span class="tag lite">이전 모델</span>':''); if(t) h=h.replace('<div class="tags">',`<div class="tags">${t}`); return h; };
@@ -838,8 +838,7 @@ for(const MD of [SINGLE,MULTI]){ const f=MD.card; MD.card=r=>{
   h=h.replace(/(<button class="star"[\s\S]*?<\/button>)(<\/div>\s*)$/, (m,a,b)=>`<div class="acts">${a}<button class="cmp" data-cmp="${esc(r._id)}" aria-pressed="${CMP.includes(r._id)}" aria-label="비교에 담기">비교</button></div>${b}`);
   return h; }; }
 const MODES = {s:SINGLE, m:MULTI, a:ALLM};
-let M = SINGLE;
-try{ const k=localStorage.getItem('aircon-mode'); if(MODES[k]) M = MODES[k]; }catch(e){}
+let M = ALLM; /* 항상 통합·전체 화면에서 시작 */
 const ALL = [...DATA_S, ...DATA_M];
 ALLM.data = ALL;
 
@@ -874,6 +873,7 @@ function filtered(){
   const st=M.state, toks=tokens(), rg=parseQuery(st.q).ranges;
   const out = M.data.filter(r=>{
     if(st.favOnly && (!FAV.has(r._id) || (FAVF && !inFolder(r._id,FAVF)))) return false;
+    if(r.discontinued && st.cat!=='disc') return false; /* 생산단종은 메뉴 '기타 > 생산단종'에서만 */
     if(st.cat!=='all' && !M.inCat(r,st.cat)) return false;
     for(const g of M.groups){
       const v=st.f[g.id];
@@ -913,7 +913,7 @@ function renderCats(){
   $('#cats').innerHTML =
     `<button class="chip filter-btn" id="open-f" aria-haspopup="dialog"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>필터${n?`<span class="count">${n}</span>`:''}</button>` +
     `<button class="chip" data-fav aria-pressed="${st.favOnly}">★ 즐겨찾기</button>` +
-    (M===SINGLE ? [...M.cats].sort((a,b)=>chipRank(a[0])-chipRank(b[0])) : M.cats).filter(([k])=>k==='all'||st.cat===k||M.data.some(r=>M.inCat(r,k))).map(([k,l])=>`<button class="chip" data-cat="${k}" aria-pressed="${st.cat===k}">${l}</button>`).join('');
+    (M===SINGLE ? [...M.cats].sort((a,b)=>chipRank(a[0])-chipRank(b[0])) : M.cats).filter(([k])=>k==='all'||st.cat===k||(k!=='disc'&&M.data.some(r=>M.inCat(r,k)))).map(([k,l])=>`<button class="chip" data-cat="${k}" aria-pressed="${st.cat===k}">${l}</button>`).join('');
   renderFolderChips();
 }
 function renderFolderChips(){
@@ -1400,6 +1400,7 @@ $('#info-done').onclick = closeSheet;
 
 /* ================= 업데이트 내역 ================= */
 const CHANGELOG = [
+  {v:'v2.0', d:'2026-10-14', t:['앱을 켜면 항상 \'통합 · 전체\' 화면에서 시작해요','생산단종 모델은 목록·검색·필터·메뉴 숫자에서 빼고, 메뉴(☰)의 \'기타 > 생산단종\'에서만 볼 수 있어요 (분류 칩의 \'생산단종\'도 없앴어요)']},
   {v:'v1.9', d:'2026-10-07', t:['형광펜 강조 조정: 실내기는 액관·가스관·판넬·제품 치수(실내기/판넬)를 강조하고, 실외기 \'전력·효율\'은 저온 난방 소비전력(-15℃)만 강조해요. \'성능\'의 저온난방은 강조를 풀었어요']},
   {v:'v1.8', d:'2026-10-07', t:['상세 화면에서 자주 보는 항목을 노란 형광펜으로 강조: 소비전력, 저온난방, 전원사양, 차단기, 전원선, 액관, 가스관, 제품 치수']},
   {v:'v1.7', d:'2026-10-01', t:['4Way 카세트를 단순화: 고효율 무풍 4Way, 무풍 4Way(NN4 시리즈), 600×600 계열(AM032NNNDBH1 등)을 \'그 외\'로 이동 (필터의 \'자주 쓰지 않는 라인업\'과 메뉴의 \'그 외\')','메뉴의 4Way·1Way 목록은 자주 쓰는 라인업만 먼저 보이고 나머지는 \'그 외\'를 눌러 펼쳐요','실내기 목록에서도 600×600 계열은 \'그 외\' 중에서 맨 뒤로 보내요']},
@@ -1543,7 +1544,7 @@ function goFilter(mode, spec){
   if(spec.sys&&'sys' in st.f) st.f.sys=spec.sys;
   closeDrawer(); render(); window.scrollTo(0,0);
 }
-const cntOf = (data,fn)=>data.reduce((n,r)=>n+(fn(r)?1:0),0);
+const cntOf = (data,fn)=>data.reduce((n,r)=>n+(!r.discontinued&&fn(r)?1:0),0); /* 생산단종 제외 */
 function drawerHtml(){
   const O=DATA_M.filter(r=>r.unit==='odu'), I=DATA_M.filter(r=>r.unit==='idu');
   const act=(mode,spec)=>`data-go='${JSON.stringify({m:mode,s:spec}).replace(/'/g,'&#39;')}'`;
@@ -1595,7 +1596,7 @@ function drawerHtml(){
   const other =
     item('즐겨찾기만 보기','__fav',{},null)+
     item('이전 모델','a',{cat:'legacy'},cntOf(ALL,r=>r.legacy))+
-    item('생산단종','a',{cat:'disc'},cntOf(ALL,r=>r.discontinued));
+    item('생산단종','a',{cat:'disc'},ALL.reduce((n,r)=>n+(r.discontinued?1:0),0));
   return `${mineHtml()}<div class="dr-sec">자주 쓰는 것</div>${quick}
     <div class="dr-sec">멀티 실외기</div>${odu}
     <div class="dr-sec">멀티 실내기 (Way별)</div>${idu}
