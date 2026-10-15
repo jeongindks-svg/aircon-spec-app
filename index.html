@@ -565,7 +565,7 @@ function newFolder(name){
 }
 
 /* ================= v1.0 공통 ================= */
-const APP_VERSION = '2.9', DATA_DATE = '2026-10-01';
+const APP_VERSION = '2.10', DATA_DATE = '2026-10-01';
 let CMP = [];
 const srcTag = r => r.source_kind==='catalog2018' ? '카탈로그 2018' : r.source_kind==='catalog' ? '카탈로그' : r.source_kind==='xls' ? (/^DVM Pro/.test(r.source_doc||'') ? 'DVM Pro 2.0' : '사양서') : 'TDB';
 const heroOf = (r,mode)=>{ let h=mode.hero(r); const t=(r.discontinued?`<span class="tag stop">${esc(r.discontinued)}</span>`:'')+(r.legacy?'<span class="tag old">이전 모델</span>':''); if(t) h=h.replace('<div class="tags">',`<div class="tags">${t}`); return h; };
@@ -995,6 +995,7 @@ function passes(r,toks,rg,skip){
   const st=M.state;
   if(st.favOnly && (!FAV.has(r._id) || (FAVF && !inFolder(r._id,FAVF)))) return false;
   if(r.discontinued && st.cat!=='disc') return false; /* 생산단종은 메뉴 '기타 > 생산단종'에서만 */
+  if(r.legacy && !st.q && !st.favOnly && st.cat!=='legacy') return false; /* 이전 모델은 검색하거나 '이전 모델'을 눌렀을 때만 */
   if(st.cat!=='all' && !M.inCat(r,st.cat)) return false;
   for(const g of M.groups){
     if(g.id===skip) continue;
@@ -1587,6 +1588,7 @@ $('#info-done').onclick = closeSheet;
 
 /* ================= 업데이트 내역 ================= */
 const CHANGELOG = [
+  {v:'v2.10', d:'2026-10-16', t:['이전 모델은 필터·빠른 메뉴로 둘러볼 때는 나오지 않아요. 검색창에 검색하거나 \'이전 모델\'을 눌렀을 때만 보여요 (메뉴·필터의 숫자도 이전 모델을 뺀 값이에요). 즐겨찾기만 볼 때는 이전 모델도 보여요']},
   {v:'v2.9', d:'2026-10-16', t:['\'이전 모델\' 표시에 주황빛 색을 넣었어요 (생산단종의 빨간색보다 옅게). 목록 카드와 상세 화면 모두 같아요']},
   {v:'v2.8', d:'2026-10-16', t:['빠른 메뉴 \'자주 쓰는 실내기\'의 360, 2Way 버튼 이름에서 괄호 안 모델 표기를 뺐어요 (동작은 그대로)']},
   {v:'v2.7', d:'2026-10-16', t:['빠른 메뉴 \'자주 쓰는 실내기\'의 2Way는 …CN2DBH1, 360은 …BN6PBH1 형태만 보여줘요 (검색창에 모델명 일부가 들어가며, 지우면 라인업 전체가 보여요)']},
@@ -1740,7 +1742,7 @@ function goFilter(mode, spec){
   if(spec.sys&&'sys' in st.f) st.f.sys=spec.sys;
   closeDrawer(); render(); window.scrollTo(0,0);
 }
-const cntOf = (data,fn)=>data.reduce((n,r)=>n+(!r.discontinued&&fn(r)?1:0),0); /* 생산단종 제외 */
+const cntOf = (data,fn)=>data.reduce((n,r)=>n+(!r.discontinued&&!r.legacy&&fn(r)?1:0),0); /* 생산단종·이전 모델 제외 */
 function drawerHtml(){
   const O=DATA_M.filter(r=>r.unit==='odu');
   const act=(mode,spec)=>`data-go='${JSON.stringify({m:mode,s:spec}).replace(/'/g,'&#39;')}'`;
@@ -1760,26 +1762,26 @@ function drawerSub(k){
   let title,all,list;
   if(k==='o'){
     title='멀티 실외기'; const g={};
-    DATA_M.filter(r=>r.unit==='odu'&&!r.discontinued).forEach(r=>{ const key=r.series+'|'+r.lineup; (g[key]=g[key]||{se:r.series,lu:r.lineup,n:0}).n++; });
+    DATA_M.filter(r=>r.unit==='odu'&&!r.discontinued&&!r.legacy).forEach(r=>{ const key=r.series+'|'+r.lineup; (g[key]=g[key]||{se:r.series,lu:r.lineup,n:0}).n++; });
     const PRI=[['DVM S2','프라임'],['DVM S2','표준형'],['DVM S2','프레스티지'],['DVM S2','냉방전용'],['DVM S Eco','DVM S Eco'],['DVM HOME','DVM HOME 단배관'],['DVM HOME','DVM HOME 다배관']];
     const rank=o=>{ const i=PRI.findIndex(p=>p[0]===o.se&&p[1]===o.lu); return i<0?99:i; };
     list=Object.values(g).sort((a,b)=>rank(a)-rank(b)||b.n-a.n).map(o=>[(o.lu.startsWith(o.se)?o.lu:`${o.se.replace('DVM ','')} · ${o.lu}`),'m',{se:[o.se],lu:[o.lu]},o.n]);
     all=['전체 보기','m',{cat:'odu'},cntOf(DATA_M,r=>r.unit==='odu')];
   } else if(k==='i'){
     title='멀티 실내기'; const g={};
-    DATA_M.filter(r=>r.unit==='idu'&&!r.etc&&!r.discontinued).forEach(r=>{ g[r.lineup]=(g[r.lineup]||0)+1; });
+    DATA_M.filter(r=>r.unit==='idu'&&!r.etc&&!r.discontinued&&!r.legacy).forEach(r=>{ g[r.lineup]=(g[r.lineup]||0)+1; });
     const rank=l=>{ const i=FREQ.idu.indexOf(l); return i<0?(/600×600/.test(l)?60:50):i; };
     list=Object.entries(g).sort((a,b)=>rank(a[0])-rank(b[0])||b[1]-a[1]).map(([l,n])=>[luName(l),'m',{lu:[l],cat:'idu'},n]);
     all=['전체 보기','m',{cat:'idu'},cntOf(DATA_M,r=>r.unit==='idu'&&!r.etc)];
   } else if(k==='s'){
     title='싱글'; const sOrd=c=>{ const i=FREQ.single.indexOf(c); return i<0?99:i; };
-    list=S_CATS.filter(([c])=>!['all','legacy','disc','lite'].includes(c)&&DATA_S.some(r=>r.category_en===c)).sort((a,b)=>sOrd(a[0])-sOrd(b[0])).map(([c,l])=>[l,'s',{cat:c},cntOf(DATA_S,r=>r.category_en===c)]);
+    list=S_CATS.filter(([c])=>!['all','legacy','disc','lite'].includes(c)&&DATA_S.some(r=>r.category_en===c)).sort((a,b)=>sOrd(a[0])-sOrd(b[0])).map(([c,l])=>[l,'s',{cat:c},cntOf(DATA_S,r=>r.category_en===c)]).filter(x=>x[3]>0);
     all=['전체 보기','s',{},cntOf(DATA_S,()=>true)];
   } else {
     title='기타 제품'; const g={};
-    DATA_M.filter(r=>r.etc).forEach(r=>{ g[r.lineup]=(g[r.lineup]||0)+1; });
+    DATA_M.filter(r=>r.etc&&!r.legacy&&!r.discontinued).forEach(r=>{ g[r.lineup]=(g[r.lineup]||0)+1; });
     list=Object.entries(g).sort((a,b)=>b[1]-a[1]).map(([l,n])=>[l,'m',{lu:[l],cat:'etc'},n]);
-    all=['전체 보기','m',{cat:'etc'},DATA_M.filter(r=>r.etc).length];
+    all=['전체 보기','m',{cat:'etc'},cntOf(DATA_M,r=>!!r.etc)];
   }
   const TOP=6, top=list.slice(0,TOP), rest=list.slice(TOP);
   return `<div class="dr-head"><button class="icon-btn" id="dr-back" aria-label="뒤로"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 5l-7 7 7 7"/></svg></button><b>${title}</b></div>
