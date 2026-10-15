@@ -562,7 +562,7 @@ function newFolder(name){
 }
 
 /* ================= v1.0 공통 ================= */
-const APP_VERSION = '2.6', DATA_DATE = '2026-10-01';
+const APP_VERSION = '2.7', DATA_DATE = '2026-10-01';
 let CMP = [];
 const srcTag = r => r.source_kind==='catalog2018' ? '카탈로그 2018' : r.source_kind==='catalog' ? '카탈로그' : r.source_kind==='xls' ? (/^DVM Pro/.test(r.source_doc||'') ? 'DVM Pro 2.0' : '사양서') : 'TDB';
 const heroOf = (r,mode)=>{ let h=mode.hero(r); const t=(r.discontinued?`<span class="tag stop">${esc(r.discontinued)}</span>`:'')+(r.legacy?'<span class="tag lite">이전 모델</span>':''); if(t) h=h.replace('<div class="tags">',`<div class="tags">${t}`); return h; };
@@ -1584,6 +1584,7 @@ $('#info-done').onclick = closeSheet;
 
 /* ================= 업데이트 내역 ================= */
 const CHANGELOG = [
+  {v:'v2.7', d:'2026-10-16', t:['빠른 메뉴 \'자주 쓰는 실내기\'의 2Way는 …CN2DBH1, 360은 …BN6PBH1 형태만 보여줘요 (검색창에 모델명 일부가 들어가며, 지우면 라인업 전체가 보여요)']},
   {v:'v2.6', d:'2026-10-16', t:['\'WindFree\'·\'Wind-Free\' 표기를 모두 \'무풍\'으로 통일했어요 (라인업 이름, 판넬 형식, 원본 문서 이름 등)','빠른 메뉴에 \'자주 쓰는 실내기\' 4라인 추가: 무풍 4Way(AM052BN4DBH1), 무풍 1Way(AM023BN1PBH1), 360(AM110BN6PBH1), 2Way(AM052CN2DBH1). 실내기 목록·필터의 \'자주 쓰는\' 순서도 이 4라인 기준이에요','이름이 겹치던 이전 라인업은 \'무풍 4Way 카세트 (NN4 이전)\', \'무풍 4Way 카세트 (600×600 이전)\'로 구분해요']},
   {v:'v2.5', d:'2026-10-16', t:['빠른 메뉴를 간결하게: 92개 항목을 한 화면으로 줄이고, 자주 쓰는 실외기 6개와 종류별(멀티 실외기·실내기·싱글·기타 제품) 4개만 먼저 보여요. 종류를 누르면 상위 6개와 \'나머지 보기\'가 나와요','필터를 간결하게: 시스템·제품군·라인업 등을 한 줄씩 접어서 한 번에 한 줄만 펼치고, 고른 내용은 줄 오른쪽에 요약해요. 결과가 없는 선택지는 숨기고 남은 선택지에 개수를 붙였어요','필터 아래에 \'결과 N개 보기\' 버튼, 목록 위에 선택한 조건 칩(×로 하나씩 빼기), 정렬 메뉴(필터에서 목록 위로 이동), 최근 본 모델 6개 추가','목록은 30개씩 이어서 그려서 더 가볍고, 글꼴은 첫 화면을 막지 않고 불러와요']},
   {v:'v2.4', d:'2026-10-15', t:['v2.3에서 추가한 싱글·중대형 64개는 최신 버전 자료라서 \'이전 모델\' 표시를 뺐어요 (전체·분류 칩에서 일반 모델로 보여요)']},
@@ -1727,7 +1728,7 @@ function mineHtml(){
 /* 항목을 누르면 해당 모드·필터를 한 번에 적용해서 결과를 보여줘요 */
 function goFilter(mode, spec){
   setMode(mode,true);
-  const st=M.state; st.q=''; $('#q').value=''; st.cat=spec.cat||(spec.se?'odu':'all'); st.favOnly=false; FAVF=null;
+  const st=M.state; st.q=spec.q||''; $('#q').value=st.q; st.cat=spec.cat||(spec.se?'odu':'all'); st.favOnly=false; FAVF=null;
   M.groups.forEach(g=>st.f[g.id]=g.single?null:new Set());
   (spec.se||[]).forEach(v=>st.f.se&&st.f.se.add(v));
   (spec.lu||[]).forEach(v=>st.f.lu&&st.f.lu.add(v));
@@ -1743,8 +1744,9 @@ function drawerHtml(){
   const chev='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 5l7 7-7 7"/></svg>';
   const kinds=[['o','멀티 실외기',cntOf(DATA_M,r=>r.unit==='odu')],['i','멀티 실내기',cntOf(DATA_M,r=>r.unit==='idu'&&!r.etc)],['s','싱글',cntOf(DATA_S,()=>true)],['e','기타 제품',cntOf(DATA_M,r=>!!r.etc)]]
     .map(([k,t,n])=>`<button class="dr-kind" data-kind="${k}"><span class="t">${t}</span><span class="n">${n}</span>${chev}</button>`).join('');
-  const iduQuick=[['무풍 4Way','WindFree 4Way 카세트'],['무풍 1Way','WindFree 1Way 카세트'],['360','360 카세트'],['2Way','2Way 카세트']]
-    .map(([t,l])=>`<button class="dr-pill" ${act('m',{lu:[l],cat:'idu'})}>${esc(t)}<span class="n">${cntOf(DATA_M,r=>r.unit==='idu'&&!r.etc&&r.lineup===l)}</span></button>`).join('');
+  /* 2Way는 …CN2DBH1, 360은 …BN6PBH1 형태만 보여줘요 (모델명 일부를 검색어로 적용) */
+  const iduQuick=[['무풍 4Way','WindFree 4Way 카세트',''],['무풍 1Way','WindFree 1Way 카세트',''],['360 (BN6PBH1)','360 카세트','BN6PBH1'],['2Way (CN2DBH1)','2Way 카세트','CN2DBH1']]
+    .map(([t,l,q])=>`<button class="dr-pill" ${act('m',Object.assign({lu:[l],cat:'idu'},q?{q}:{}))}>${esc(t)}<span class="n">${cntOf(DATA_M,r=>r.unit==='idu'&&!r.etc&&r.lineup===l&&(!q||r.model.includes(q)))}</span></button>`).join('');
   return `${mineHtml()}<div class="dr-sec">자주 쓰는 실외기</div><div class="dr-grid">${quick}</div><div class="dr-sec">자주 쓰는 실내기</div><div class="dr-grid">${iduQuick}</div><div class="dr-sec">종류별로 찾기</div><div class="dr-kinds">${kinds}</div>`;
 }
 function drawerSub(k){
