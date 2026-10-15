@@ -13,7 +13,8 @@
 <title>시스템 에어컨 규격 검색</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
 <style>
 :root{
   --bg:#E9EDF1; --surface:#FFFFFF; --sunk:#F3F5F8; --ink:#17212B; --muted:#5C6B7A; --line:#D3DAE1;
@@ -335,6 +336,64 @@ details.rest .opts{margin-top:6px}
 .acc-row .n{display:block;font-size:13.5px;margin-top:2px}
 .acc-row .d{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
 .acc-empty{padding:40px 12px;text-align:center;color:var(--muted);font-size:14px}
+
+/* ---------- v2.5 간결한 메뉴·필터 ---------- */
+.drawer{overflow:hidden}
+.dr-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 8px}
+.dr-pill{display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:42px;padding:0 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:13.5px;white-space:nowrap;text-align:left}
+.dr-pill .n{color:var(--muted);font-weight:500;font-size:12px}
+.dr-pill:hover{background:var(--bg)}
+.dr-kinds{display:flex;flex-direction:column;margin:0 8px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.dr-kind{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 12px;background:var(--surface);width:100%;text-align:left}
+.dr-kind+.dr-kind{border-top:1px solid var(--line)}
+.dr-kind .t{flex:1;font-weight:600}
+.dr-kind .n{color:var(--muted);font-size:12.5px}
+.dr-kind svg{color:var(--muted);flex:none}
+.dr-foot{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;border-top:1px solid var(--line);padding:8px 8px 2px;flex:none}
+.dr-foot button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;color:var(--muted);padding:6px 2px;border-radius:10px}
+.dr-foot button:hover{background:var(--bg)}
+.dr-foot2{display:flex;justify-content:center;gap:18px;padding:2px 8px calc(10px + env(safe-area-inset-bottom,0px));font-size:12.5px;color:var(--muted);flex:none}
+.dr-foot2 button{padding:6px 4px;text-decoration:underline;text-underline-offset:3px}
+.dr-panel{position:absolute;inset:0;background:var(--surface);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .2s ease;visibility:hidden;padding-top:env(safe-area-inset-top,0px);z-index:2}
+.dr-panel.on{transform:none;visibility:visible}
+.dr-panel .dr-head{justify-content:flex-start;gap:4px;padding-left:8px}
+.dr-more2{width:100%;text-align:left;padding:12px 10px;color:var(--cool);font-weight:600;font-size:14px}
+.dr-item.all{font-weight:700}
+.sheet#fsheet{display:flex;flex-direction:column;padding-bottom:0;overflow:hidden;max-height:88%}
+#fsheet .sh-head{display:flex;align-items:center;justify-content:space-between}
+#fsheet .txtbtn{color:var(--muted);font-weight:600;height:36px;padding:0 10px;border-radius:10px}
+#fgroups{flex:1;overflow-y:auto;overscroll-behavior:contain;margin:0 -16px;padding:0 16px}
+.facc{border-bottom:1px solid var(--line)}
+.facc-h{display:flex;align-items:center;gap:8px;width:100%;min-height:52px;text-align:left}
+.facc-h .t{font-weight:600;min-width:64px}
+.facc-h .s{flex:1;color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+.facc-h .s.has{color:var(--cool);font-weight:600}
+.facc-h svg{flex:none;color:var(--muted);transition:transform .15s}
+.facc.open .facc-h svg{transform:rotate(180deg)}
+.facc-b{display:none;padding:0 0 14px}
+.facc.open .facc-b{display:block}
+.facc .chip .n{font-size:12px;color:var(--muted);margin-left:2px}
+.facc .chip[aria-pressed="true"] .n{color:inherit;opacity:.75}
+.fsearch{width:100%;height:38px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:0 12px;font:inherit;font-size:14px;color:var(--ink);margin-bottom:8px}
+.fnote{color:var(--muted);font-size:12px;margin:10px 0 0}
+#fsheet .actions{margin:0 -16px;padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--surface);flex:none}
+#fsheet .actions #f-done{flex:2}
+.selbar{display:flex;gap:6px;overflow-x:auto;padding:8px 0 0;scrollbar-width:none;margin:0 -16px;padding-left:16px;padding-right:16px}
+.selbar::-webkit-scrollbar{display:none}
+.selbar .chip{background:var(--cool);color:#fff;border-color:var(--cool);height:30px;font-size:13px}
+.selbar .chip .x{margin-left:4px;opacity:.85}
+.selbar .clr{background:var(--surface);color:var(--muted);border-color:var(--line)}
+.meta-row{position:relative}
+.sortbtn{color:var(--cool);font-weight:600}
+.sortmenu{position:absolute;right:0;top:100%;z-index:25;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:4px;min-width:200px}
+.sortmenu button{display:flex;width:100%;text-align:left;padding:10px 12px;border-radius:8px;font-size:14px;color:var(--ink);font-weight:500}
+.sortmenu button[aria-checked="true"]{color:var(--cool);font-weight:700}
+.sortmenu button:hover{background:var(--bg)}
+.recent{display:flex;align-items:center;gap:6px;overflow-x:auto;padding:8px 0 0;scrollbar-width:none;margin:0 -16px;padding-left:16px;padding-right:16px}
+.recent::-webkit-scrollbar{display:none}
+.recent .lb{font-size:12px;color:var(--muted);flex:none}
+.recent .chip{height:28px;font-size:12.5px;padding:0 10px}
+.more-s{padding:18px 12px;text-align:center;color:var(--muted);font-size:13px}
 </style>
 
 </head>
@@ -358,8 +417,10 @@ details.rest .opts{margin-top:6px}
       </button>
     </label>
     <div class="chips" id="cats" role="group" aria-label="분류"></div>
+    <div class="selbar" id="selbar" role="group" aria-label="선택한 조건" hidden></div>
     <div class="fchips" id="fchips" role="group" aria-label="즐겨찾기 폴더" hidden></div>
-    <div class="meta-row"><span id="count"></span><button class="upd" id="upd-btn" aria-haspopup="dialog"><span id="upd-v"></span> 업데이트<i class="dot" id="upd-dot" hidden></i></button><button id="reset" hidden>필터 초기화</button></div>
+    <div class="meta-row"><span id="count"></span><button class="sortbtn" id="sort-btn" aria-haspopup="menu" aria-expanded="false"></button><div class="sortmenu" id="sort-menu" role="menu" hidden></div><button class="upd" id="upd-btn" aria-haspopup="dialog"><span id="upd-v"></span> 업데이트<i class="dot" id="upd-dot" hidden></i></button><button id="reset" hidden>필터 초기화</button></div>
+    <div class="recent" id="recent" aria-label="최근 본 모델" hidden></div>
   </div>
 </header>
 
@@ -370,12 +431,20 @@ details.rest .opts{margin-top:6px}
 <nav class="drawer" id="drawer" aria-label="빠른 메뉴" aria-hidden="true">
   <div class="dr-head"><b>빠른 메뉴</b><button class="icon-btn" id="nav-close" aria-label="닫기"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <div class="dr-body" id="dr-body"></div>
+  <div class="dr-foot" id="dr-foot">
+    <button data-go='{"m":"__fav","s":{}}'><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>즐겨찾기</button>
+    <button data-go='{"m":"__acc","s":{}}'><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8l8-4 8 4-8 4zM4 8v8l8 4 8-4V8"/></svg>부자재</button>
+    <button data-go='{"m":"a","s":{"cat":"legacy"}}'><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>이전 모델</button>
+    <button data-go='{"m":"a","s":{"cat":"disc"}}'><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M8 8l8 8"/></svg>생산단종</button>
+  </div>
+  <div class="dr-foot2"><button data-go='{"m":"__upd","s":{}}'>업데이트 내역</button><button data-go='{"m":"__info","s":{}}'>정보·출처</button></div>
+  <div class="dr-panel" id="dr-panel" aria-hidden="true"></div>
 </nav>
 <div class="sheet" id="fsheet" role="dialog" aria-modal="true" aria-labelledby="fsheet-t">
   <div class="grab"></div>
-  <h2 id="fsheet-t">필터</h2>
+  <div class="sh-head"><h2 id="fsheet-t">필터</h2><button class="txtbtn" id="f-clear">초기화</button></div>
   <div id="fgroups"></div>
-  <div class="actions"><button id="f-clear">초기화</button><button id="f-save">메뉴에 저장</button><button class="primary" id="f-done">결과 보기</button></div>
+  <div class="actions"><button id="f-save">메뉴에 저장</button><button class="primary" id="f-done">결과 보기</button></div>
 </div>
 
 <div class="detail" id="detail" role="dialog" aria-modal="true" aria-labelledby="d-title">
@@ -493,7 +562,7 @@ function newFolder(name){
 }
 
 /* ================= v1.0 공통 ================= */
-const APP_VERSION = '2.4', DATA_DATE = '2026-10-01';
+const APP_VERSION = '2.5', DATA_DATE = '2026-10-01';
 let CMP = [];
 const srcTag = r => r.source_kind==='catalog2018' ? '카탈로그 2018' : r.source_kind==='catalog' ? '카탈로그' : r.source_kind==='xls' ? (/^DVM Pro/.test(r.source_doc||'') ? 'DVM Pro 2.0' : '사양서') : 'TDB';
 const heroOf = (r,mode)=>{ let h=mode.hero(r); const t=(r.discontinued?`<span class="tag stop">${esc(r.discontinued)}</span>`:'')+(r.legacy?'<span class="tag lite">이전 모델</span>':''); if(t) h=h.replace('<div class="tags">',`<div class="tags">${t}`); return h; };
@@ -935,6 +1004,17 @@ function filtered(){
   return out.sort(s[2]);
 }
 function activeCount(){ return M.groups.reduce((n,g)=>n+(g.single?(M.state.f[g.id]!=null?1:0):M.state.f[g.id].size),0); }
+const LIST_STEP=30; let listRows=[], listShown=0, moreIO=null;
+function watchMore(){
+  if(moreIO){ moreIO.disconnect(); moreIO=null; }
+  const el=$('#more-s'); if(!el) return;
+  moreIO=new IntersectionObserver(es=>{ if(!es[0].isIntersecting) return;
+    const next=listRows.slice(listShown,listShown+LIST_STEP); listShown+=next.length;
+    el.insertAdjacentHTML('beforebegin',next.map(M.card).join(''));
+    if(listShown>=listRows.length){ el.remove(); moreIO.disconnect(); moreIO=null; } else { el.textContent=`아래로 내리면 이어서 보여요 (${listShown} / ${listRows.length})`; }
+  },{rootMargin:'600px'});
+  moreIO.observe(el);
+}
 function render(){
   const st=M.state, rows=filtered();
   const rgq=parseQuery(st.q).ranges;
@@ -949,11 +1029,11 @@ function render(){
       <br><button id="empty-reset">필터 초기화</button></div>`;
     $('#empty-reset').onclick = resetAll;
   } else {
-    const LIMIT = 120;
-    $('#list').innerHTML = rows.slice(0,LIMIT).map(M.card).join('') +
-      (rows.length>LIMIT?`<div class="empty" style="padding:20px">처음 ${LIMIT}개만 표시했어요. 검색어나 필터로 좁혀 보세요.</div>`:'');
+    listRows=rows; listShown=Math.min(LIST_STEP,rows.length);
+    $('#list').innerHTML = rows.slice(0,listShown).map(M.card).join('') + (rows.length>listShown?`<div class="more-s" id="more-s">아래로 내리면 이어서 보여요 (${listShown} / ${rows.length})</div>`:'');
+    watchMore();
   }
-  renderCats();
+  renderCats(); renderSelBar(); renderSort(); renderRecent();
 }
 const chipRank = k => k==='all'?-1 : k==='legacy'?90 : k==='disc'?91 : (FREQ.single.indexOf(k)<0?50:FREQ.single.indexOf(k));
 function renderCats(){
@@ -989,25 +1069,71 @@ function resetAll(){
 }
 
 /* filter sheet */
+let fOpen=null, fMore={}, fSearch={};
 function renderFilter(){
-  const st=M.state;
-  const toks=tokens(), rg=parseQuery(st.q).ranges;
+  const st=M.state, toks=tokens(), rg=parseQuery(st.q).ranges;
+  if(fOpen===undefined) fOpen=null;
   $('#fgroups').innerHTML = M.groups.map(g=>{
-    const v=st.f[g.id];
-    /* 지금 고른 조건에서 결과가 하나도 없는 선택지는 비활성화 (이미 고른 것은 해제할 수 있게 유지) */
+    const v=st.f[g.id], sel=o=>g.single? v===o : v.has(o);
+    /* 지금 조건에서 결과가 있는 선택지만 보여요 (이미 고른 것은 해제할 수 있게 남겨요) */
     const base=M.data.filter(r=>passes(r,toks,rg,g.id));
-    const btn=([ov,l])=>{ const on=g.single? v===ov : v.has(ov); const ok=on||base.some(r=>g.test(r,ov));
-      return `<button class="chip" data-g="${g.id}" data-v="${esc(ov)}" aria-pressed="${on}"${ok?'':' disabled'}>${esc(l)}</button>`; };
-    const all=g.single?[`<button class="chip" data-g="${g.id}" data-v="" aria-pressed="${v==null}">전체</button>`]:[];
-    if(!g.common) return `<h3>${g.title}</h3><div class="opts">${all.concat(g.opts.map(btn)).join('')}</div>`;
-    const top=g.common.map(c=>g.opts.find(o=>o[0]===c)).filter(Boolean), rest=g.opts.filter(o=>!g.common.includes(o[0]));
-    const openRest = rest.some(o=>g.single? v===o[0] : v.has(o[0]));
-    return `<h3>${g.title}</h3><div class="opts">${all.concat(top.map(btn)).join('')}</div>
-      <details class="rest"${openRest?' open':''}><summary>자주 쓰지 않는 ${g.title} ${rest.length}개</summary><div class="opts">${rest.map(btn).join('')}</div></details>`;
-  }).join('') + `<h3>정렬</h3><div class="opts">${M.sorts.map(([k,l])=>`<button class="chip" data-g="__sort" data-v="${k}" aria-pressed="${st.sort===k}">${l}</button>`).join('')}</div>`;
+    const cntBy=new Map(); g.opts.forEach(([ov])=>cntBy.set(ov,base.reduce((n,r)=>n+(g.test(r,ov)?1:0),0)));
+    const avail=g.opts.filter(([ov])=>sel(ov)||cntBy.get(ov)>0), hidden=g.opts.length-avail.length;
+    const lab=ov=>{ const o=g.opts.find(x=>x[0]===ov); return o?o[1]:String(ov); };
+    const selLabels=g.single?(v==null?[]:[lab(v)]):[...v].map(lab);
+    const sum=selLabels.length?selLabels.slice(0,2).join(', ')+(selLabels.length>2?` 외 ${selLabels.length-2}`:''):'전체';
+    const q=norm(fSearch[g.id]||''); let list=avail; if(q) list=list.filter(([,l])=>norm(l).includes(q));
+    const top=g.common&&!q ? list.filter(([ov])=>g.common.includes(ov)||sel(ov)) : list;
+    const LIM=g.common&&!q?top.length:12;
+    const shownList = (q||fMore[g.id]) ? list : (g.common? top : list.slice(0,LIM));
+    const more=list.length-shownList.length;
+    const open=fOpen===g.id;
+    const btn=([ov,l])=>`<button class="chip" data-g="${g.id}" data-v="${esc(ov)}" aria-pressed="${sel(ov)}">${esc(l)}<span class="n">${cntBy.get(ov)}</span></button>`;
+    const all=g.single?`<button class="chip" data-g="${g.id}" data-v="" aria-pressed="${v==null}">전체</button>`:'';
+    return `<div class="facc${open?' open':''}"><button class="facc-h" data-acc="${g.id}" aria-expanded="${open}"><span class="t">${esc(g.title)}</span><span class="s${selLabels.length?' has':''}">${esc(sum)}</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="facc-b">${avail.length>14?`<input class="fsearch" id="fs-${g.id}" data-fs="${g.id}" type="search" placeholder="${esc(g.title)} 찾기" value="${esc(fSearch[g.id]||'')}" autocomplete="off">`:''}
+      <div class="opts">${all}${shownList.map(btn).join('')}${more>0?`<button class="chip" data-more="${g.id}" style="color:var(--cool)">더보기 ${more}개</button>`:''}</div>
+      ${hidden?`<p class="fnote">결과가 없는 선택지 ${hidden}개는 숨겼어요.</p>`:''}</div></div>`;
+  }).join('');
+  $('#f-done').textContent=`결과 ${filtered().length}개 보기`;
 }
+
+/* ---------- 선택한 조건 칩 · 정렬 메뉴 · 최근 본 모델 ---------- */
+function renderSelBar(){
+  const st=M.state, out=[];
+  M.groups.forEach(g=>{ const v=st.f[g.id]; const vals=g.single?(v==null?[]:[v]):[...v];
+    vals.forEach(x=>{ const o=g.opts.find(o=>o[0]===x); out.push(`<button class="chip" data-sg="${g.id}" data-sv="${esc(x)}" aria-label="${esc(o?o[1]:x)} 조건 빼기">${esc(o?o[1]:x)}<span class="x">×</span></button>`); }); });
+  const bar=$('#selbar'); bar.hidden=!out.length;
+  bar.innerHTML=out.join('')+(out.length>1?'<button class="chip clr" data-sclear>모두 지우기</button>':'');
+}
+$('#selbar').addEventListener('click',e=>{
+  const st=M.state;
+  if(e.target.closest('[data-sclear]')){ M.groups.forEach(g=>st.f[g.id]=g.single?null:new Set()); render(); return; }
+  const b=e.target.closest('[data-sg]'); if(!b) return;
+  const g=M.groups.find(x=>x.id===b.dataset.sg); const raw=b.dataset.sv; const v=g.num?parseFloat(raw):raw;
+  if(g.single) st.f[g.id]=null; else st.f[g.id].delete(v);
+  render();
+});
+function renderSort(){
+  const st=M.state, cur=M.sorts.find(x=>x[0]===st.sort)||M.sorts[0];
+  const short=cur[1].replace(/\s*\(.*$/,'');
+  $('#sort-btn').textContent=short+' ▾';
+  $('#sort-menu').innerHTML=M.sorts.map(([k,l])=>`<button role="menuitemradio" aria-checked="${cur[0]===k}" data-sort="${k}">${esc(l)}</button>`).join('');
+}
+$('#sort-btn').onclick=e=>{ e.stopPropagation(); const m=$('#sort-menu'); m.hidden=!m.hidden; $('#sort-btn').setAttribute('aria-expanded',String(!m.hidden)); };
+$('#sort-menu').addEventListener('click',e=>{ const b=e.target.closest('[data-sort]'); if(!b) return; M.state.sort=b.dataset.sort; $('#sort-menu').hidden=true; $('#sort-btn').setAttribute('aria-expanded','false'); render(); });
+document.addEventListener('click',e=>{ if(!e.target.closest('#sort-menu')&&!e.target.closest('#sort-btn')){ $('#sort-menu').hidden=true; $('#sort-btn').setAttribute('aria-expanded','false'); } });
+let RECENT=[]; try{ RECENT=JSON.parse(localStorage.getItem('aircon-recent')||'[]').filter(x=>typeof x==='string').slice(0,6); }catch(e){}
+function pushRecent(id){ RECENT=[id,...RECENT.filter(x=>x!==id)].slice(0,6); try{ localStorage.setItem('aircon-recent',JSON.stringify(RECENT)); }catch(e){} renderRecent(); }
+function renderRecent(){
+  const st=M.state, box=$('#recent'); const items=RECENT.map(id=>ALL.find(r=>r._id===id)).filter(Boolean);
+  box.hidden = !items.length || !!st.q || st.favOnly;
+  if(box.hidden) return;
+  box.innerHTML='<span class="lb">최근 본</span>'+items.map(r=>`<button class="chip" data-recent="${esc(r._id)}">${esc((r._id.startsWith('m:')?MULTI:SINGLE).title(r))}</button>`).join('');
+}
+$('#recent').addEventListener('click',e=>{ const b=e.target.closest('[data-recent]'); if(!b) return; const r=ALL.find(x=>x._id===b.dataset.recent); if(r) openDetail(r); });
 const SHEETS = ['#fsheet','#favsheet','#mgsheet','#infosheet','#pdfsheet','#updsheet','#scsheet'];
-function openSheet(){ renderFilter(); $('#scrim').classList.add('on'); $('#fsheet').classList.add('on'); }
+function openSheet(){ fOpen=(M.groups[0]||{}).id||null; fMore={}; fSearch={}; renderFilter(); $('#scrim').classList.add('on'); $('#fsheet').classList.add('on'); }
 function closeSheet(){ $('#scrim').classList.remove('on'); SHEETS.forEach(x=>$(x).classList.remove('on')); }
 const anySheet = ()=> SHEETS.some(x=>$(x).classList.contains('on'));
 /* 즐겨찾기 폴더 시트 */
@@ -1079,19 +1205,19 @@ $('#fchips').addEventListener('click',e=>{
   FAVF = b.dataset.folder || null; render(); window.scrollTo(0,0);
 });
 $('#fsheet').addEventListener('click',e=>{
+  const a=e.target.closest('[data-acc]'); if(a){ fOpen=fOpen===a.dataset.acc?null:a.dataset.acc; renderFilter(); return; }
+  const mo=e.target.closest('[data-more]'); if(mo){ fMore[mo.dataset.more]=true; renderFilter(); return; }
   const b=e.target.closest('[data-g]'); if(!b) return;
   const st=M.state, gid=b.dataset.g, raw=b.dataset.v;
-  if(gid==='__sort'){ st.sort=raw; }
-  else{
-    const g=M.groups.find(x=>x.id===gid);
-    const v = raw==='' ? null : (g.num ? parseFloat(raw) : raw);
-    if(g.single) st.f[gid]=v;
-    else { const set=st.f[gid]; set.has(v)?set.delete(v):set.add(v); }
-  }
+  const g=M.groups.find(x=>x.id===gid);
+  const v = raw==='' ? null : (g.num ? parseFloat(raw) : raw);
+  if(g.single) st.f[gid]=v;
+  else { const set=st.f[gid]; set.has(v)?set.delete(v):set.add(v); }
   renderFilter(); render();
 });
+$('#fsheet').addEventListener('input',e=>{ const f=e.target.closest('[data-fs]'); if(!f) return; fSearch[f.dataset.fs]=f.value; const pos=f.selectionStart; renderFilter(); const n=$('#fs-'+f.dataset.fs); if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(_){} } });
 $('#f-done').onclick = closeSheet;
-$('#f-clear').onclick = ()=>{ const st=M.state; M.groups.forEach(g=>st.f[g.id]=g.single?null:new Set()); st.sort=M.sorts[0][0]; renderFilter(); render(); };
+$('#f-clear').onclick = ()=>{ const st=M.state; M.groups.forEach(g=>st.f[g.id]=g.single?null:new Set()); fSearch={}; renderFilter(); render(); };
 $('#scrim').onclick = closeSheet;
 
 /* detail */
@@ -1144,6 +1270,7 @@ function secRows(secs){
   }).filter(s=>s.rows.length);
 }
 function openDetail(r, push=true){
+  pushRecent(r._id);
   const {mode,secs} = detailParts(r);
   current = r;
   $('#d-title').textContent = mode.title(r);
@@ -1452,6 +1579,7 @@ $('#info-done').onclick = closeSheet;
 
 /* ================= 업데이트 내역 ================= */
 const CHANGELOG = [
+  {v:'v2.5', d:'2026-10-16', t:['빠른 메뉴를 간결하게: 92개 항목을 한 화면으로 줄이고, 자주 쓰는 실외기 6개와 종류별(멀티 실외기·실내기·싱글·기타 제품) 4개만 먼저 보여요. 종류를 누르면 상위 6개와 \'나머지 보기\'가 나와요','필터를 간결하게: 시스템·제품군·라인업 등을 한 줄씩 접어서 한 번에 한 줄만 펼치고, 고른 내용은 줄 오른쪽에 요약해요. 결과가 없는 선택지는 숨기고 남은 선택지에 개수를 붙였어요','필터 아래에 \'결과 N개 보기\' 버튼, 목록 위에 선택한 조건 칩(×로 하나씩 빼기), 정렬 메뉴(필터에서 목록 위로 이동), 최근 본 모델 6개 추가','목록은 30개씩 이어서 그려서 더 가볍고, 글꼴은 첫 화면을 막지 않고 불러와요']},
   {v:'v2.4', d:'2026-10-15', t:['v2.3에서 추가한 싱글·중대형 64개는 최신 버전 자료라서 \'이전 모델\' 표시를 뺐어요 (전체·분류 칩에서 일반 모델로 보여요)']},
   {v:'v2.3', d:'2026-10-15', t:['싱글·중대형 64개 추가 (B 계열 360·4Way·1Way·덕트·실링·중대형) — 세부 스펙 전체 포함','DVM HOME 냉방전용 실내기 14개 추가 (AJ…MB1 무풍 1Way 10개, AM…KN4 360 4개)','기존 모델에 세트 모델명 45개 추가 (AP…ST/PP/SY 등, 세트명으로도 검색됨)','부자재 11개 추가 (판넬·리모컨·Drain Pump 등, 총 130개)']},
   {v:'v2.2', d:'2026-10-14', t:['필터 화면에서 지금 고른 조건으로 결과가 없는 선택지는 흐리게 막아서, 누를수록 나오는 것만 고를 수 있어요 (이미 고른 것은 눌러서 해제 가능)']},
@@ -1586,7 +1714,7 @@ function mineHtml(){
     return `<button class="dr-item mine" data-sc="${it.id}"><span class="nm">${esc(it.name)}</span>${n!=null?`<span class="n">${n}</span>`:''}</button>`;
   }).join('');
   const save = can ? `<button class="dr-save" data-sc-save>＋ 지금 고른 조건 저장<small>${esc(describeSpec(cur))}</small></button>` : '';
-  const hint = !SC.length && !can ? `<div class="dr-hint">필터를 고른 뒤 '메뉴에 저장'(또는 여기의 저장 버튼)을 누르면 이 자리에 저장돼요.</div>` : '';
+  const hint = !SC.length && !can ? `<div class="dr-hint">필터를 고른 뒤 '메뉴에 저장'을 누르면 여기에 나와요.</div>` : '';
   return head+items+save+hint;
 }
 /* ================= 왼쪽 빠른 메뉴 (서랍) ================= */
@@ -1602,77 +1730,58 @@ function goFilter(mode, spec){
 }
 const cntOf = (data,fn)=>data.reduce((n,r)=>n+(!r.discontinued&&fn(r)?1:0),0); /* 생산단종 제외 */
 function drawerHtml(){
-  const O=DATA_M.filter(r=>r.unit==='odu'), I=DATA_M.filter(r=>r.unit==='idu'&&!r.etc);
+  const O=DATA_M.filter(r=>r.unit==='odu');
   const act=(mode,spec)=>`data-go='${JSON.stringify({m:mode,s:spec}).replace(/'/g,'&#39;')}'`;
-  const item=(label,mode,spec,n,cls='')=>`<button class="dr-item ${cls}" ${act(mode,spec)}>${esc(label)}${n!=null?`<span class="n">${n}</span>`:''}</button>`;
-  const acc=(title,n,inner,open)=>`<details class="dr-acc"${open?' open':''}><summary>${esc(title)}${n!=null?`<span class="n">${n}</span>`:'<span class="n"></span>'}</summary><div class="dr-sub"><div>${inner}</div></div></details>`;
-  const luN=l=>cntOf(M_DATA_ALL(),r=>r.lineup===l);
-  const seN=s=>cntOf(O,r=>r.series===s);
-  // 자주 쓰는 바로가기
-  const quick =
-    item('DVM S2 프라임','m',{se:['DVM S2'],lu:['프라임']},cntOf(O,r=>r.series==='DVM S2'&&r.lineup==='프라임'),'star-top hot')+
-    item('DVM S2 표준형','m',{se:['DVM S2'],lu:['표준형']},cntOf(O,r=>r.series==='DVM S2'&&r.lineup==='표준형'),'star-top hot')+
-    item('DVM S2 프레스티지','m',{se:['DVM S2'],lu:['프레스티지']},cntOf(O,r=>r.series==='DVM S2'&&r.lineup==='프레스티지'),'star-top hot')+
-    item('DVM S2 냉방전용','m',{se:['DVM S2'],lu:['냉방전용']},cntOf(O,r=>r.series==='DVM S2'&&r.lineup==='냉방전용'),'star-top hot')+
-    item('DVM S Eco','m',{se:['DVM S Eco']},seN('DVM S Eco'),'star-top hot')+
-    item('DVM HOME','m',{se:['DVM HOME']},seN('DVM HOME'),'star-top hot');
-  // 제품군(실외기)
-  const s2Lu=['프라임','표준형','프레스티지','냉방전용'], s2Rest=[...new Set(O.filter(r=>r.series==='DVM S2').map(r=>r.lineup))].filter(l=>!s2Lu.includes(l));
-  const odu =
-    acc('DVM S2',seN('DVM S2'),
-      item('전체','m',{se:['DVM S2']},seN('DVM S2'),'sub')+
-      s2Lu.map(l=>item(l,'m',{se:['DVM S2'],lu:[l]},cntOf(O,r=>r.series==='DVM S2'&&r.lineup===l),'sub')).join('')+
-      acc('그 외 라인업',null,s2Rest.map(l=>item(l,'m',{se:['DVM S2'],lu:[l]},cntOf(O,r=>r.series==='DVM S2'&&r.lineup===l),'sub')).join('')))+
-    acc('DVM S Eco',seN('DVM S Eco'),item('전체','m',{se:['DVM S Eco']},seN('DVM S Eco'),'sub')+
-      [...new Set(O.filter(r=>r.series==='DVM S Eco').map(r=>r.lineup))].map(l=>item(l,'m',{se:['DVM S Eco'],lu:[l]},cntOf(O,r=>r.series==='DVM S Eco'&&r.lineup===l),'sub')).join(''))+
-    acc('DVM HOME',seN('DVM HOME'),item('전체','m',{se:['DVM HOME']},seN('DVM HOME'),'sub')+
-      [...new Set(O.filter(r=>r.series==='DVM HOME').map(r=>r.lineup))].map(l=>item(l,'m',{se:['DVM HOME'],lu:[l]},cntOf(O,r=>r.series==='DVM HOME'&&r.lineup===l),'sub')).join(''))+
-    acc('그 외 제품군',null,['DVM S Mini','DVM S Slim','DVM S Water','DVM GHP','DVM Chiller','Fit HOME'].filter(s=>seN(s)).map(s=>item(s,'m',{se:[s]},seN(s),'sub')).join(''));
-  // 실내기: Way별
-  const wayOf=(re)=>[...new Set(I.map(r=>r.lineup))].filter(l=>re.test(l));
-  const order=l=>{ const i=FREQ.idu.indexOf(l); return i<0?99:i; };
-  const wayAcc=(title,re)=>{
-    const L=wayOf(re).sort((a,b)=>order(a)-order(b)||a.localeCompare(b)); if(!L.length) return '';
-    const top=L.filter(l=>FREQ.idu.includes(l)), rest=L.filter(l=>!FREQ.idu.includes(l)).sort((a,b)=>(/600×600/.test(a)-/600×600/.test(b))||(LU_ORDER[a]??99)-(LU_ORDER[b]??99));
-    const row=l=>item(luName(l),'m',{lu:[l],cat:'idu'},cntOf(I,r=>r.lineup===l),'sub'+(FREQ.idu.includes(l)?' hot':''));
-    const nC=cntOf(I,r=>L.includes(r.lineup));
-    return acc(title,nC,
-      item('전체','m',{lu:L,cat:'idu'},nC,'sub')+top.map(row).join('')+
-      (rest.length?acc('그 외',cntOf(I,r=>rest.includes(r.lineup)),rest.map(row).join('')):''));
-  };
-  const used=new Set();
-  const way4=wayOf(/4Way/).filter(l=>!/^FCU/.test(l)), way1=wayOf(/1Way/).filter(l=>!/^FCU/.test(l)), way2=wayOf(/2Way/).filter(l=>!/^FCU/.test(l));
-  [...way4,...way1,...way2].forEach(l=>used.add(l));
-  const idu = wayAcc('4Way 카세트',/^(?!FCU)(?!Fit).*4Way/)+wayAcc('1Way 카세트',/^(?!FCU)(?!Fit).*1Way/)+wayAcc('2Way 카세트',/^(?!FCU)(?!Fit).*2Way/)+
-    (()=>{ const rest=[...new Set(I.map(r=>r.lineup))].filter(l=>!used.has(l)); return acc('360·덕트·벽걸이·그 외',cntOf(I,r=>rest.includes(r.lineup)),rest.sort((a,b)=>order(a)-order(b)||a.localeCompare(b)).map(l=>item(luName(l),'m',{lu:[l],cat:'idu'},cntOf(I,r=>r.lineup===l),'sub'+(FREQ.idu.includes(l)?' hot':''))).join('')); })();
-  // 싱글
-  const sOrd=c=>{ const i=FREQ.single.indexOf(c); return i<0?99:i; };
-  const sCats=S_CATS.filter(([k])=>!['all','legacy','disc','lite'].includes(k) && DATA_S.some(r=>r.category_en===k)).sort((a,b)=>sOrd(a[0])-sOrd(b[0]));
-  const single = sCats.map(([k,l])=>item(l,'s',{cat:k},cntOf(DATA_S,r=>r.category_en===k),'sub'+(FREQ.single.includes(k)?' hot':''))).join('');
-  const etcR=DATA_M.filter(r=>r.etc), etcL=[...new Set(etcR.map(r=>r.lineup))];
-  const etc = acc('전열교환기·제습기·칠러·EHS·콜드체인',etcR.length,item('전체','m',{cat:'etc'},etcR.length,'sub')+etcL.map(l=>item(l,'m',{lu:[l],cat:'etc'},etcR.filter(r=>r.lineup===l).length,'sub')).join(''),false);
-  const other =
-    item('부자재 (판넬·배관·Kit·리모컨·제어)','__acc',{},ACC_DATA.length)+
-    item('즐겨찾기만 보기','__fav',{},null)+
-    item('이전 모델','a',{cat:'legacy'},cntOf(ALL,r=>r.legacy))+
-    item('생산단종','a',{cat:'disc'},ALL.reduce((n,r)=>n+(r.discontinued?1:0),0));
-  return `${mineHtml()}<div class="dr-sec">자주 쓰는 것</div>${quick}
-    <div class="dr-sec">멀티 실외기</div>${odu}
-    <div class="dr-sec">멀티 실내기 (Way별)</div>${idu}
-    <div class="dr-sec">싱글</div>${acc('싱글 제품군',DATA_S.length,single,false)}
-    <div class="dr-sec">기타 제품</div>${etc}
-    <div class="dr-sec">기타</div>${other}
-    <div class="dr-sec">앱</div>${item('업데이트 내역','__upd',{},null)}${item('정보·출처','__info',{},null)}`;
+  const quick=[['S2 프라임',{se:['DVM S2'],lu:['프라임']}],['S2 표준형',{se:['DVM S2'],lu:['표준형']}],['S2 프레스티지',{se:['DVM S2'],lu:['프레스티지']}],['S2 냉방전용',{se:['DVM S2'],lu:['냉방전용']}],['S Eco',{se:['DVM S Eco']}],['HOME',{se:['DVM HOME']}]]
+    .map(([t,sp])=>`<button class="dr-pill" ${act('m',sp)}>${esc(t)}<span class="n">${cntOf(O,r=>(!sp.se||sp.se.includes(r.series))&&(!sp.lu||sp.lu.includes(r.lineup)))}</span></button>`).join('');
+  const chev='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 5l7 7-7 7"/></svg>';
+  const kinds=[['o','멀티 실외기',cntOf(DATA_M,r=>r.unit==='odu')],['i','멀티 실내기',cntOf(DATA_M,r=>r.unit==='idu'&&!r.etc)],['s','싱글',cntOf(DATA_S,()=>true)],['e','기타 제품',cntOf(DATA_M,r=>!!r.etc)]]
+    .map(([k,t,n])=>`<button class="dr-kind" data-kind="${k}"><span class="t">${t}</span><span class="n">${n}</span>${chev}</button>`).join('');
+  return `${mineHtml()}<div class="dr-sec">자주 쓰는 실외기</div><div class="dr-grid">${quick}</div><div class="dr-sec">종류별로 찾기</div><div class="dr-kinds">${kinds}</div>`;
+}
+function drawerSub(k){
+  const act=(mode,spec)=>`data-go='${JSON.stringify({m:mode,s:spec}).replace(/'/g,'&#39;')}'`;
+  const row=(t,mode,spec,n,cls='')=>`<button class="dr-item ${cls}" ${act(mode,spec)}>${esc(t)}<span class="n">${n}</span></button>`;
+  let title,all,list;
+  if(k==='o'){
+    title='멀티 실외기'; const g={};
+    DATA_M.filter(r=>r.unit==='odu'&&!r.discontinued).forEach(r=>{ const key=r.series+'|'+r.lineup; (g[key]=g[key]||{se:r.series,lu:r.lineup,n:0}).n++; });
+    const PRI=[['DVM S2','프라임'],['DVM S2','표준형'],['DVM S2','프레스티지'],['DVM S2','냉방전용'],['DVM S Eco','DVM S Eco'],['DVM HOME','DVM HOME 단배관'],['DVM HOME','DVM HOME 다배관']];
+    const rank=o=>{ const i=PRI.findIndex(p=>p[0]===o.se&&p[1]===o.lu); return i<0?99:i; };
+    list=Object.values(g).sort((a,b)=>rank(a)-rank(b)||b.n-a.n).map(o=>[(o.lu.startsWith(o.se)?o.lu:`${o.se.replace('DVM ','')} · ${o.lu}`),'m',{se:[o.se],lu:[o.lu]},o.n]);
+    all=['전체 보기','m',{cat:'odu'},cntOf(DATA_M,r=>r.unit==='odu')];
+  } else if(k==='i'){
+    title='멀티 실내기'; const g={};
+    DATA_M.filter(r=>r.unit==='idu'&&!r.etc&&!r.discontinued).forEach(r=>{ g[r.lineup]=(g[r.lineup]||0)+1; });
+    const rank=l=>{ const i=FREQ.idu.indexOf(l); return i<0?(/600×600/.test(l)?60:50):i; };
+    list=Object.entries(g).sort((a,b)=>rank(a[0])-rank(b[0])||b[1]-a[1]).map(([l,n])=>[luName(l),'m',{lu:[l],cat:'idu'},n]);
+    all=['전체 보기','m',{cat:'idu'},cntOf(DATA_M,r=>r.unit==='idu'&&!r.etc)];
+  } else if(k==='s'){
+    title='싱글'; const sOrd=c=>{ const i=FREQ.single.indexOf(c); return i<0?99:i; };
+    list=S_CATS.filter(([c])=>!['all','legacy','disc','lite'].includes(c)&&DATA_S.some(r=>r.category_en===c)).sort((a,b)=>sOrd(a[0])-sOrd(b[0])).map(([c,l])=>[l,'s',{cat:c},cntOf(DATA_S,r=>r.category_en===c)]);
+    all=['전체 보기','s',{},cntOf(DATA_S,()=>true)];
+  } else {
+    title='기타 제품'; const g={};
+    DATA_M.filter(r=>r.etc).forEach(r=>{ g[r.lineup]=(g[r.lineup]||0)+1; });
+    list=Object.entries(g).sort((a,b)=>b[1]-a[1]).map(([l,n])=>[l,'m',{lu:[l],cat:'etc'},n]);
+    all=['전체 보기','m',{cat:'etc'},DATA_M.filter(r=>r.etc).length];
+  }
+  const TOP=6, top=list.slice(0,TOP), rest=list.slice(TOP);
+  return `<div class="dr-head"><button class="icon-btn" id="dr-back" aria-label="뒤로"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 5l-7 7 7 7"/></svg></button><b>${title}</b></div>
+  <div class="dr-body">${row(...all,'all')}${top.map(x=>row(...x)).join('')}${rest.length?`<div id="dr-rest" hidden>${rest.map(x=>row(...x)).join('')}</div><button class="dr-more2" id="dr-more">나머지 ${rest.length}개 보기 ▾</button>`:''}</div>`;
 }
 function M_DATA_ALL(){ return DATA_M; }
 function openDrawer(){ if(!SC.length) drEdit=false; $('#dr-body').innerHTML=drawerHtml(); $('#drawer').classList.add('on'); $('#drawer').setAttribute('aria-hidden','false'); $('#nav-scrim').classList.add('on'); }
-function closeDrawer(){ $('#drawer').classList.remove('on'); $('#drawer').setAttribute('aria-hidden','true'); $('#nav-scrim').classList.remove('on'); }
+function closeDrawer(){ $('#dr-panel').classList.remove('on'); $('#dr-panel').setAttribute('aria-hidden','true'); $('#drawer').classList.remove('on'); $('#drawer').setAttribute('aria-hidden','true'); $('#nav-scrim').classList.remove('on'); }
 $('#nav-open').onclick = openDrawer;
 $('#nav-close').onclick = closeDrawer;
 $('#nav-scrim').onclick = closeDrawer;
-const redrawDrawer = ()=>{ const t=$('#dr-body').scrollTop; $('#dr-body').innerHTML=drawerHtml(); $('#dr-body').scrollTop=t; };
-$('#dr-body').addEventListener('click',e=>{
+let x0; const redrawDrawer = ()=>{ const t=$('#dr-body').scrollTop; $('#dr-body').innerHTML=drawerHtml(); $('#dr-body').scrollTop=t; };
+$('#drawer').addEventListener('click',e=>{
   const t=e.target;
+  if((x0=t.closest('[data-kind]'))){ $('#dr-panel').innerHTML=drawerSub(x0.dataset.kind); $('#dr-panel').classList.add('on'); $('#dr-panel').setAttribute('aria-hidden','false'); return; }
+  if(t.closest('#dr-back')){ $('#dr-panel').classList.remove('on'); $('#dr-panel').setAttribute('aria-hidden','true'); return; }
+  if(t.closest('#dr-more')){ $('#dr-rest').hidden=false; t.closest('#dr-more').remove(); return; }
   if(t.closest('#dr-edit')){ drEdit=!drEdit; redrawDrawer(); return; }
   if(t.closest('[data-sc-save]')){ scReopen=true; openSave(); return; }
   let x;
