@@ -256,6 +256,9 @@ details.miss p{margin:6px 0 0;line-height:1.6}
 
 /* ---------- v1.2 ---------- */
 .tag.stop{background:#D63C42;border-color:#D63C42;color:#fff;font-weight:600}
+.tag.old{background:#FBE3BC;border-color:#D9962B;color:#6B4200;font-weight:600}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tag.old{background:#4A3510;border-color:#B07A1F;color:#F3D08A}}
+:root[data-theme="dark"] .tag.old{background:#4A3510;border-color:#B07A1F;color:#F3D08A}
 .meta-row{gap:12px}
 .meta-row #count{flex:1}
 .upd{display:inline-flex;align-items:center;gap:6px}
@@ -562,10 +565,10 @@ function newFolder(name){
 }
 
 /* ================= v1.0 공통 ================= */
-const APP_VERSION = '2.8', DATA_DATE = '2026-10-01';
+const APP_VERSION = '2.9', DATA_DATE = '2026-10-01';
 let CMP = [];
 const srcTag = r => r.source_kind==='catalog2018' ? '카탈로그 2018' : r.source_kind==='catalog' ? '카탈로그' : r.source_kind==='xls' ? (/^DVM Pro/.test(r.source_doc||'') ? 'DVM Pro 2.0' : '사양서') : 'TDB';
-const heroOf = (r,mode)=>{ let h=mode.hero(r); const t=(r.discontinued?`<span class="tag stop">${esc(r.discontinued)}</span>`:'')+(r.legacy?'<span class="tag lite">이전 모델</span>':''); if(t) h=h.replace('<div class="tags">',`<div class="tags">${t}`); return h; };
+const heroOf = (r,mode)=>{ let h=mode.hero(r); const t=(r.discontinued?`<span class="tag stop">${esc(r.discontinued)}</span>`:'')+(r.legacy?'<span class="tag old">이전 모델</span>':''); if(t) h=h.replace('<div class="tags">',`<div class="tags">${t}`); return h; };
 const cellText = el => { if(!el) return ''; const t=document.createElement('div'); t.innerHTML=el.innerHTML.replace(/<br\s*\/?>/gi,'\n').replace(/<wbr>/gi,''); return t.textContent.replace(/[ \t\u00a0]+/g,' ').replace(/ ?\n ?/g,'\n').trim(); };
 function missingItems(r){
   if(r.info_level==='lite') return [];
@@ -950,7 +953,7 @@ const ALLM = {
 for(const MD of [SINGLE,MULTI]){ const f=MD.card; MD.card=r=>{
   let h=f(r);
   if(r.info_level==='lite') h=h.replace('<div class="tags">','<div class="tags"><span class="tag lite">간이 정보</span>');
-  else if(r.legacy) h=h.replace('<div class="tags">','<div class="tags"><span class="tag lite">이전 모델</span>');
+  else if(r.legacy) h=h.replace('<div class="tags">','<div class="tags"><span class="tag old">이전 모델</span>');
   if(r.discontinued) h=h.replace('<div class="tags">',`<div class="tags"><span class="tag stop">${esc(r.discontinued)}</span>`);
   h=h.replace(/(<div class="tags">[\s\S]*?)<\/div>/, (m,a)=>a+`<span class="tag from">${esc(srcTag(r))}</span>${(r.check_notes||[]).length?'<span class="tag warn">확인 필요</span>':''}</div>`);
   h=h.replace(/(<button class="star"[\s\S]*?<\/button>)(<\/div>\s*)$/, (m,a,b)=>`<div class="acts">${a}<button class="cmp" data-cmp="${esc(r._id)}" aria-pressed="${CMP.includes(r._id)}" aria-label="비교에 담기">비교</button></div>${b}`);
@@ -1584,6 +1587,7 @@ $('#info-done').onclick = closeSheet;
 
 /* ================= 업데이트 내역 ================= */
 const CHANGELOG = [
+  {v:'v2.9', d:'2026-10-16', t:['\'이전 모델\' 표시에 주황빛 색을 넣었어요 (생산단종의 빨간색보다 옅게). 목록 카드와 상세 화면 모두 같아요']},
   {v:'v2.8', d:'2026-10-16', t:['빠른 메뉴 \'자주 쓰는 실내기\'의 360, 2Way 버튼 이름에서 괄호 안 모델 표기를 뺐어요 (동작은 그대로)']},
   {v:'v2.7', d:'2026-10-16', t:['빠른 메뉴 \'자주 쓰는 실내기\'의 2Way는 …CN2DBH1, 360은 …BN6PBH1 형태만 보여줘요 (검색창에 모델명 일부가 들어가며, 지우면 라인업 전체가 보여요)']},
   {v:'v2.6', d:'2026-10-16', t:['\'WindFree\'·\'Wind-Free\' 표기를 모두 \'무풍\'으로 통일했어요 (라인업 이름, 판넬 형식, 원본 문서 이름 등)','빠른 메뉴에 \'자주 쓰는 실내기\' 4라인 추가: 무풍 4Way(AM052BN4DBH1), 무풍 1Way(AM023BN1PBH1), 360(AM110BN6PBH1), 2Way(AM052CN2DBH1). 실내기 목록·필터의 \'자주 쓰는\' 순서도 이 4라인 기준이에요','이름이 겹치던 이전 라인업은 \'무풍 4Way 카세트 (NN4 이전)\', \'무풍 4Way 카세트 (600×600 이전)\'로 구분해요']},
