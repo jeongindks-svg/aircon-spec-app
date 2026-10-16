@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>try{ var u=+localStorage.getItem('aircon-unlock-at'); if(!(u && Date.now()-u<10800000 && u<=Date.now())) document.documentElement.classList.add('locked'); }catch(e){ document.documentElement.classList.add('locked'); }</script>
 <meta name="theme-color" content="#E9EDF1" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0F161D" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
@@ -397,10 +398,55 @@ details.rest .opts{margin-top:6px}
 .recent .lb{font-size:12px;color:var(--muted);flex:none}
 .recent .chip{height:28px;font-size:12.5px;padding:0 10px}
 .more-s{padding:18px 12px;text-align:center;color:var(--muted);font-size:13px}
+
+/* ---------- 잠금 화면 ---------- */
+html.locked body>*:not(#lock){display:none!important}
+#lock{display:none}
+html.locked #lock{display:flex;position:fixed;inset:0;z-index:100;background:var(--bg);align-items:center;justify-content:center;padding:24px}
+.lock-box{width:min(100%,340px);background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:26px 22px 22px;text-align:center}
+.lock-box h1{font-size:18px;margin:0 0 4px}
+.lock-box p{margin:0 0 16px;color:var(--muted);font-size:13.5px}
+#lock-pw{width:100%;height:50px;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);text-align:center;font:inherit;font-size:22px;letter-spacing:6px}
+#lock-pw:focus-visible{outline:2px solid var(--cool);outline-offset:2px}
+#lock-ok{width:100%;height:48px;margin-top:10px;border-radius:12px;background:var(--ink);color:var(--bg);font-weight:700}
+#lock-err{min-height:20px;margin:10px 0 0;color:#D63C42;font-size:13px}
 </style>
 
 </head>
 <body>
+<div id="lock" role="dialog" aria-modal="true" aria-label="비밀번호 입력">
+  <form class="lock-box" id="lock-form" autocomplete="off">
+    <h1>시스템 에어컨 규격 검색</h1>
+    <p>비밀번호를 입력하면 3시간 동안 다시 묻지 않아요.</p>
+    <input id="lock-pw" type="password" inputmode="numeric" autocomplete="off" aria-label="비밀번호" placeholder="••••">
+    <button id="lock-ok" type="submit">열기</button>
+    <div id="lock-err" role="alert"></div>
+  </form>
+</div>
+<script>
+/* 잠금: 비밀번호는 코드에 저장하지 않고 변환값(SHA-256)만 비교해요. 한 번 열면 3시간 동안 유지돼요. */
+(function(){
+  var HASH='d9401afe9e3afee88a26437dfbb2404d1a060780b40e8d29a69f1311f460fb77', TTL=3*60*60*1000, KEY='aircon-unlock-at', root=document.documentElement;
+  var fails=0, until=0;
+  function unlocked(){ try{ var u=+localStorage.getItem(KEY); return !!(u && u<=Date.now() && Date.now()-u<TTL); }catch(e){ return false; } }
+  function sha(t){ return crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)).then(function(b){ return Array.prototype.map.call(new Uint8Array(b),function(x){ return ('0'+x.toString(16)).slice(-2); }).join(''); }); }
+  function show(){ root.classList.add('locked'); var i=document.getElementById('lock-pw'); if(i){ i.value=''; setTimeout(function(){ try{ i.focus(); }catch(e){} },50); } }
+  window.lockNow=function(){ try{ localStorage.removeItem(KEY); }catch(e){} show(); };
+  if(unlocked()) root.classList.remove('locked'); else show();
+  document.getElementById('lock-form').addEventListener('submit',function(e){
+    e.preventDefault();
+    var err=document.getElementById('lock-err'), v=document.getElementById('lock-pw').value.trim();
+    if(Date.now()<until){ err.textContent='잠시 후에 다시 시도해 주세요.'; return; }
+    if(!window.crypto||!crypto.subtle){ err.textContent='보안 연결(https)에서만 열 수 있어요.'; return; }
+    sha('aircon-spec:'+v).then(function(h){
+      if(h===HASH){ try{ localStorage.setItem(KEY,String(Date.now())); }catch(e){} fails=0; err.textContent=''; root.classList.remove('locked'); }
+      else{ fails++; document.getElementById('lock-pw').value=''; if(fails>=5){ until=Date.now()+30000; fails=0; err.textContent='5번 틀렸어요. 30초 뒤에 다시 시도해 주세요.'; } else err.textContent='비밀번호가 맞지 않아요.'; }
+    });
+  });
+  setInterval(function(){ if(!root.classList.contains('locked') && !unlocked()) show(); },30000);
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden && !root.classList.contains('locked') && !unlocked()) show(); });
+})();
+</script>
 <header class="top">
   <div class="wrap">
     <div class="title-row">
@@ -440,7 +486,7 @@ details.rest .opts{margin-top:6px}
     <button data-go='{"m":"a","s":{"cat":"legacy"}}'><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>이전 모델</button>
     <button data-go='{"m":"a","s":{"cat":"disc"}}'><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M8 8l8 8"/></svg>생산단종</button>
   </div>
-  <div class="dr-foot2"><button data-go='{"m":"__upd","s":{}}'>업데이트 내역</button><button data-go='{"m":"__info","s":{}}'>정보·출처</button></div>
+  <div class="dr-foot2"><button data-go='{"m":"__upd","s":{}}'>업데이트 내역</button><button data-go='{"m":"__info","s":{}}'>정보·출처</button><button data-go='{"m":"__lock","s":{}}'>지금 잠그기</button></div>
   <div class="dr-panel" id="dr-panel" aria-hidden="true"></div>
 </nav>
 <div class="sheet" id="fsheet" role="dialog" aria-modal="true" aria-labelledby="fsheet-t">
@@ -565,7 +611,7 @@ function newFolder(name){
 }
 
 /* ================= v1.0 공통 ================= */
-const APP_VERSION = '2.10', DATA_DATE = '2026-10-01';
+const APP_VERSION = '2.11', DATA_DATE = '2026-10-01';
 let CMP = [];
 const srcTag = r => r.source_kind==='catalog2018' ? '카탈로그 2018' : r.source_kind==='catalog' ? '카탈로그' : r.source_kind==='xls' ? (/^DVM Pro/.test(r.source_doc||'') ? 'DVM Pro 2.0' : '사양서') : 'TDB';
 const heroOf = (r,mode)=>{ let h=mode.hero(r); const t=(r.discontinued?`<span class="tag stop">${esc(r.discontinued)}</span>`:'')+(r.legacy?'<span class="tag old">이전 모델</span>':''); if(t) h=h.replace('<div class="tags">',`<div class="tags">${t}`); return h; };
@@ -1588,6 +1634,7 @@ $('#info-done').onclick = closeSheet;
 
 /* ================= 업데이트 내역 ================= */
 const CHANGELOG = [
+  {v:'v2.11', d:'2026-10-16', t:['앱을 열면 비밀번호를 먼저 물어요. 한 번 열면 3시간 동안 다시 묻지 않고, 빠른 메뉴 맨 아래 \'지금 잠그기\'로 바로 잠글 수 있어요 (이 화면은 앱 화면을 가리는 잠금이고, 데이터 자체를 암호화한 것은 아니에요)']},
   {v:'v2.10', d:'2026-10-16', t:['이전 모델은 필터·빠른 메뉴로 둘러볼 때는 나오지 않아요. 검색창에 검색하거나 \'이전 모델\'을 눌렀을 때만 보여요 (메뉴·필터의 숫자도 이전 모델을 뺀 값이에요). 즐겨찾기만 볼 때는 이전 모델도 보여요']},
   {v:'v2.9', d:'2026-10-16', t:['\'이전 모델\' 표시에 주황빛 색을 넣었어요 (생산단종의 빨간색보다 옅게). 목록 카드와 상세 화면 모두 같아요']},
   {v:'v2.8', d:'2026-10-16', t:['빠른 메뉴 \'자주 쓰는 실내기\'의 360, 2Way 버튼 이름에서 괄호 안 모델 표기를 뺐어요 (동작은 그대로)']},
@@ -1812,6 +1859,7 @@ $('#drawer').addEventListener('click',e=>{
   else if(m==='__upd'){ closeDrawer(); openUpd(); }
   else if(m==='__info'){ closeDrawer(); openInfo(); }
   else if(m==='__acc'){ closeDrawer(); accOpen(); }
+  else if(m==='__lock'){ closeDrawer(); window.lockNow&&window.lockNow(); }
   else goFilter(m,s);
 });
 
