@@ -611,7 +611,7 @@ function newFolder(name){
 }
 
 /* ================= v1.0 공통 ================= */
-const APP_VERSION = '2.11', DATA_DATE = '2026-10-01';
+const APP_VERSION = '2.12', DATA_DATE = '2026-10-01';
 let CMP = [];
 const srcTag = r => r.source_kind==='catalog2018' ? '카탈로그 2018' : r.source_kind==='catalog' ? '카탈로그' : r.source_kind==='xls' ? (/^DVM Pro/.test(r.source_doc||'') ? 'DVM Pro 2.0' : '사양서') : 'TDB';
 const heroOf = (r,mode)=>{ let h=mode.hero(r); const t=(r.discontinued?`<span class="tag stop">${esc(r.discontinued)}</span>`:'')+(r.legacy?'<span class="tag old">이전 모델</span>':''); if(t) h=h.replace('<div class="tags">',`<div class="tags">${t}`); return h; };
@@ -1634,7 +1634,8 @@ $('#info-done').onclick = closeSheet;
 
 /* ================= 업데이트 내역 ================= */
 const CHANGELOG = [
-  {v:'v2.11', d:'2026-10-16', t:['앱을 열면 비밀번호를 먼저 물어요. 한 번 열면 3시간 동안 다시 묻지 않고, 빠른 메뉴 맨 아래 \'지금 잠그기\'로 바로 잠글 수 있어요 (이 화면은 앱 화면을 가리는 잠금이고, 데이터 자체를 암호화한 것은 아니에요)']},
+  {v:'v2.12', d:'2026-10-18', t:['업데이트 내용(v2.11)에서 잠금 화면 설명 문구를 정리했어요']},
+  {v:'v2.11', d:'2026-10-16', t:['앱을 열면 비밀번호를 먼저 물어요. 한 번 열면 3시간 동안 다시 묻지 않고, 빠른 메뉴 맨 아래 \'지금 잠그기\'로 바로 잠글 수 있어요']},
   {v:'v2.10', d:'2026-10-16', t:['이전 모델은 필터·빠른 메뉴로 둘러볼 때는 나오지 않아요. 검색창에 검색하거나 \'이전 모델\'을 눌렀을 때만 보여요 (메뉴·필터의 숫자도 이전 모델을 뺀 값이에요). 즐겨찾기만 볼 때는 이전 모델도 보여요']},
   {v:'v2.9', d:'2026-10-16', t:['\'이전 모델\' 표시에 주황빛 색을 넣었어요 (생산단종의 빨간색보다 옅게). 목록 카드와 상세 화면 모두 같아요']},
   {v:'v2.8', d:'2026-10-16', t:['빠른 메뉴 \'자주 쓰는 실내기\'의 360, 2Way 버튼 이름에서 괄호 안 모델 표기를 뺐어요 (동작은 그대로)']},
