@@ -611,7 +611,7 @@ function newFolder(name){
 }
 
 /* ================= v1.0 공통 ================= */
-const APP_VERSION = '2.12', DATA_DATE = '2026-10-01';
+const APP_VERSION = '2.13', DATA_DATE = '2026-10-01';
 let CMP = [];
 const srcTag = r => r.source_kind==='catalog2018' ? '카탈로그 2018' : r.source_kind==='catalog' ? '카탈로그' : r.source_kind==='xls' ? (/^DVM Pro/.test(r.source_doc||'') ? 'DVM Pro 2.0' : '사양서') : 'TDB';
 const heroOf = (r,mode)=>{ let h=mode.hero(r); const t=(r.discontinued?`<span class="tag stop">${esc(r.discontinued)}</span>`:'')+(r.legacy?'<span class="tag old">이전 모델</span>':''); if(t) h=h.replace('<div class="tags">',`<div class="tags">${t}`); return h; };
@@ -762,17 +762,20 @@ const M_CATS = [['all','전체'],['odu','실외기'],['idu','실내기'],['etc',
 const M_LINEUPS = ['프레스티지','프레스티지 Compact','프라임','프라임 Compact','표준형','표준형 Compact','고온형','고효율 한랭지형','공장전원','동시냉난방','냉방전용','냉방전용 Compact','DVM S Mini','DVM S Eco','DVM S Eco Renewal','DVM S Slim','DVM S Water','DVM S GEO','DVM Chiller','GHP','Fit HOME','DVM HOME 단배관','DVM HOME 다배관','PAC(스탠드)','BESPOKE Infinite Line 무풍','무풍 1Way 카세트','WindFree 1Way 카세트','1Way 카세트','무풍 4Way 카세트 (고효율)','무풍 4Way 카세트','무풍 4Way 카세트 (600×600)','WindFree 4Way 카세트','WindFree 4Way 카세트 (600×600)','4Way 카세트','4Way 카세트 (600×600)','360 카세트','2Way 카세트','슬림 덕트','Home Duct','Duct S','중정압 덕트 (MSP)','고정압 덕트 (HSP)','실링','벽걸이 Wind-Free','벽걸이','바닥상치형','시스템 청정환기','Hydro Unit','Hydro Unit HT','Fit HOME 무풍 1Way 카세트','Fit HOME FAC (스탠드)','Fit HOME RAC (벽걸이)','FCU 1Way 카세트','FCU 무풍 1Way 카세트','FCU 2Way 카세트','FCU 4Way 카세트 (600×600)','FCU 4Way 카세트','FCU 무풍 4Way 카세트','FCU 360 카세트','BESPOKE AI Air Combo'];
 /* 자주 쓰는 항목 (위쪽에 먼저 표시). 주문량·생산량 순서가 정해지면 아래 배열 순서만 바꾸면 돼요 */
 const FREQ = {
-  series:['DVM S2','DVM S Eco','DVM HOME'],
+  series:['DVM S2','DVM S Eco','DVM S Mini'],
   lineup:['프라임','표준형','프레스티지','냉방전용'],
   idu:['WindFree 4Way 카세트','WindFree 1Way 카세트','360 카세트','2Way 카세트'], /* 자주 쓰는 실내기 4라인 (AM052BN4DBH1, AM023BN1PBH1, AM110BN6PBH1, AM052CN2DBH1) */
   single:['windfree_4way_cassette','windfree_1way_cassette','360_cassette','pac','duct']
 };
 /* 같은 이름 라인업을 구분해서 보여주기 (데이터의 라인업 값은 그대로) */
-const LU_LABEL = {'WindFree 1Way 카세트':'무풍 1Way 카세트 (프리미엄)','무풍 1Way 카세트':'무풍 1Way 카세트 (DVM HOME)',
+const LU_LABEL = {'DVM S Mini':'DVM S Compact','DVM S Eco':'DVM S Renewal','DVM S Eco Renewal':'DVM S Renewal (Ver1.1)','WindFree 1Way 카세트':'무풍 1Way 카세트 (프리미엄)','무풍 1Way 카세트':'무풍 1Way 카세트 (DVM HOME)',
   'WindFree 4Way 카세트':'무풍 4Way 카세트','무풍 4Way 카세트':'무풍 4Way 카세트 (NN4 이전)',
   'WindFree 4Way 카세트 (600×600)':'무풍 4Way 카세트 (600×600)','무풍 4Way 카세트 (600×600)':'무풍 4Way 카세트 (600×600 이전)',
   '벽걸이 Wind-Free':'무풍 벽걸이'};
 const luName = l => LU_LABEL[l] || l;
+/* 제품군 표시 이름 (데이터 값은 그대로) */
+const SE_LABEL = {'DVM S Mini':'DVM S Compact','DVM S Eco':'DVM S Renewal'};
+const seName = v => SE_LABEL[v] || v;
 /* 자주 쓰는 순 정렬 점수 (작을수록 위): 멀티 실외기 → 멀티 실내기 → 싱글 */
 function freqRank(r){
   const old = r.legacy ? 60 : 0;   // 이전 모델은 같은 종류 안에서 뒤로
@@ -780,6 +783,7 @@ function freqRank(r){
   if(r.unit==='odu'){
     if(r.series==='DVM S2'){ const i=FREQ.lineup.indexOf(r.lineup); return (i>=0 ? i : 4)+old; }
     if(r.series==='DVM S Eco') return 10+old;
+    if(r.series==='DVM S Mini') return 10.5+old;
     if(r.series==='DVM HOME') return 11+old;
     return 30+old;
   }
@@ -805,7 +809,7 @@ const M_ALIAS = {
   '동시냉난방':['sys','heat_recovery'],'동시':['sys','heat_recovery'],'HR':['sys','heat_recovery'],
   '프레스티지':['lu','프레스티지'],'프라임':['lu','프라임'],'표준형':['lu','표준형'],'표준':['lu','표준형'],'고온형':['lu','고온형'],'고온':['lu','고온형'],
   '한랭지':['lu','한랭지'],'한랭지형':['lu','한랭지'],'공장전원':['lu','공장전원'],'460V':['v',460],'380V':['v',380],
-  'COMPACT':['lu','Compact'],'컴팩트':['lu','Compact'],'단품':['n',1],'조합':['n',2],
+  'COMPACT':['lu','Compact'],'컴팩트':['lu','Compact'],'리뉴얼':['se','DVM S Eco'],'RENEWAL':['se','DVM S Eco'],'단품':['n',1],'조합':['n',2],
   '실외기':['unit','odu'],'실내기':['unit','idu'],'미니':['se','DVM S Mini'],'MINI':['se','DVM S Mini'],'에코':['se','DVM S Eco'],'ECO':['se','DVM S Eco'],'홈':['se','DVM HOME'],'슬림':['se','DVM S Slim'],'워터':['se','DVM S Water'],'WATER':['se','DVM S Water'],'수냉':['se','DVM S Water'],'수열원':['se','DVM S Water'],'GEO':['lu','GEO'],'지오':['lu','GEO'],'지열':['lu','GEO'],'GHP':['se','DVM GHP'],'가스':['se','DVM GHP'],'가스히트펌프':['se','DVM GHP'],'SLIM':['se','DVM S Slim'],'리뉴얼':['lu','Renewal'],'RENEWAL':['lu','Renewal'],'360':['lu','360'],'UV':['grade','UV'],'HOME':['se','DVM HOME'],'DVMHOME':['se','DVM HOME'],'S2':['se','DVM S2'],
   '스탠드':['lu','PAC('],'PAC':['lu','PAC('],'인피니트':['lu','Infinite'],'INFINITE':['lu','Infinite'],'1WAY':['lu','1Way'],'4WAY':['lu','4Way'],'포웨이':['lu','4Way'],'2WAY':['lu','2Way'],'투웨이':['lu','2Way'],'무풍':['lure','무풍|WindFree'],'WINDFREE':['lure','무풍|WindFree'],'600':['lu','600×600'],'덕트':['lure','덕트|Duct'],'DUCT':['lure','덕트|Duct'],'HSP':['lu','HSP'],'FCU':['se','FCU (팬코일)'],'칠러':['se','DVM Chiller'],'CHILLER':['se','DVM Chiller'],'팬코일':['se','FCU (팬코일)'],'냉온수':['se','FCU (팬코일)'],'MSP':['lu','MSP'],'중정압':['lu','중정압'],'HYDRO':['lu','Hydro'],'하이드로':['lu','Hydro'],'핏홈':['se','Fit HOME'],'FITHOME':['se','Fit HOME'],'FIT':['se','Fit HOME'],'FAC':['lu','FAC'],'RAC':['lu','RAC'],'고정압':['lu','고정압'],'실링':['lu','실링'],'천장':['lu','실링'],'CEILING':['lu','실링'],'벽걸이':['lu','벽걸이'],'바닥상치':['lu','바닥상치'],'바닥':['lu','바닥상치'],'청정환기':['lu','청정환기'],'환기':['lure','환기|Air Combo'],'슬림덕트':['lu','슬림 덕트'],'카세트':['lu','카세트'],'에어콤보':['lu','Air Combo'],'콤보':['lu','Air Combo'],
   '단배관':['lu','단배관'],'다배관':['lu','다배관'],'220V':['v',220],'단상':['v',220],'삼상':['v3',1]
@@ -823,7 +827,7 @@ DATA_I.forEach(r=>{ r.hp=null; if(r.source_doc) r.source_doc=unWF(r.source_doc);
 DATA_M.push(...DATA_I);
 DATA_M.forEach(r=>{
   r._id = 'm:'+r.model+'__'+r.lineup;
-  r._hay = norm([r.model,r.modules,r.compressor_model,r.panel_models,r.lineup,luName(r.lineup),r.series,r.system_ko,r.kind_ko,r.side,r.grade,(r.model_aliases||[]).join('|'),r.lite_type,r.info_level==='lite'?'간이 정보|간이정보':'',r.discontinued||''].join('|'));
+  r._hay = norm([r.model,r.modules,r.compressor_model,r.panel_models,r.lineup,luName(r.lineup),r.series,seName(r.series),r.system_ko,r.kind_ko,r.side,r.grade,(r.model_aliases||[]).join('|'),r.lite_type,r.info_level==='lite'?'간이 정보|간이정보':'',r.discontinued||''].join('|'));
   r._cap = r.unit==='idu' ? (r.capacity_kw ?? r.cooling_capacity_kw) : r.cooling_capacity_kw;
 });
 const SYS_ORDER = {cooling_only:0,heat_pump:1,heat_recovery:2,ventilation:3,fcu:4,dehumid:5,chiller:6,ehs:7,coldchain:8};
@@ -837,13 +841,13 @@ const mTags = r => r.unit==='idu' ? `<span class="tag">${esc(r.kind_ko||'실내�
 const MULTI = {
   key:'m', data:DATA_M, noun:'모델',
   placeholder:'모델명 · 20HP · 10~20HP · 58kW',
-  foot:'삼성 DVM Technical Data Book(R410A, 60Hz) 제품 규격 페이지 기준입니다. DVM S2 실외기(HP Ver6.4, 동시냉난방 Ver1.2, 냉방전용 Ver1.2), DVM S Mini(Ver1.0), DVM S Eco(2014.01, 2016 냉난방 Ver1.0, Ver1.2, 냉방전용 Ver2.1), DVM S Eco Renewal(Ver1.1), DVM S Slim(냉방전용 Ver1.1), DVM S Water(Ver4.1), GHP(F시리즈 Ver2.1), DVM Chiller(Ver1.5), DVM HOME(냉방전용), Fit HOME(냉방전용 Ver1.0), DVM 실내기(DVM S 실내기 신통신 초판·Ver1.2, Hydro Unit·HT Ver1.1, 벽걸이 Boracay Ver1.0, 무풍 4Way Ver2.0, Slim Duct ver1.01, VRF PAC 2023 Ver1.1, FCU Ver3.2·2022 Ver2.0, 스탠드 Ver1.0, 360 카세트 Ver1.1, 고효율 무풍 4Way Ver2.0, 무풍 4Way·UV Ver1.0, 2Way 카세트 Ver1.0, BESPOKE Infinite Line Ver1.0, Duct S Ver1.1, Duct(2024) Ver1.0, 슬림 덕트 Ver1.0, 무풍 1Way Ver1.1, 실링 Ver1.0, 벽걸이 무풍 Ver2.0, 시스템 청정환기 Ver1.0)가 들어 있어요. DVM S GEO, DVM S Water 40·50·60HP, 스탠드 AM145JNPDBH1, 바닥상치형은 2023 종합카탈로그 기준이에요. DVM S2 효율 항목은 원본에 단품 모델만 표기되어 있어요.',
+  foot:'삼성 DVM Technical Data Book(R410A, 60Hz) 제품 규격 페이지 기준입니다. DVM S2 실외기(HP Ver6.4, 동시냉난방 Ver1.2, 냉방전용 Ver1.2), DVM S Compact(Ver1.0), DVM S Renewal(2014.01, 2016 냉난방 Ver1.0, Ver1.2, 냉방전용 Ver2.1), DVM S Renewal(Ver1.1), DVM S Slim(냉방전용 Ver1.1), DVM S Water(Ver4.1), GHP(F시리즈 Ver2.1), DVM Chiller(Ver1.5), DVM HOME(냉방전용), Fit HOME(냉방전용 Ver1.0), DVM 실내기(DVM S 실내기 신통신 초판·Ver1.2, Hydro Unit·HT Ver1.1, 벽걸이 Boracay Ver1.0, 무풍 4Way Ver2.0, Slim Duct ver1.01, VRF PAC 2023 Ver1.1, FCU Ver3.2·2022 Ver2.0, 스탠드 Ver1.0, 360 카세트 Ver1.1, 고효율 무풍 4Way Ver2.0, 무풍 4Way·UV Ver1.0, 2Way 카세트 Ver1.0, BESPOKE Infinite Line Ver1.0, Duct S Ver1.1, Duct(2024) Ver1.0, 슬림 덕트 Ver1.0, 무풍 1Way Ver1.1, 실링 Ver1.0, 벽걸이 무풍 Ver2.0, 시스템 청정환기 Ver1.0)가 들어 있어요. DVM S GEO, DVM S Water 40·50·60HP, 스탠드 AM145JNPDBH1, 바닥상치형은 2023 종합카탈로그 기준이에요. DVM S2 효율 항목은 원본에 단품 모델만 표기되어 있어요.',
   state:{ q:'', cat:'all', f:{sys:null, se:new Set(), lu:new Set(), n:null, v:null}, sort:'freq', favOnly:false },
   cats:M_CATS,
   inCat:(r,c)=> c==='lite' ? r.info_level==='lite' : c==='legacy' ? !!r.legacy : c==='disc' ? !!r.discontinued : c==='etc' ? !!r.etc : (r.unit===c && !r.etc),
   groups:[
     {id:'sys', title:'시스템', single:true, opts:[['cooling_only','냉방전용'],['heat_pump','냉난방'],['heat_recovery','동시냉난방'],['ventilation','청정환기'],['fcu','FCU (냉온수)'],['dehumid','제습'],['chiller','칠러 (냉온수)'],['ehs','EHS (온수)'],['coldchain','냉장 (콜드체인)']], test:(r,v)=>r.system===v || (r.systems||[]).includes(v)},
-    {id:'se', title:'제품군', opts:M_SERIES.map(l=>[l,l]), common:FREQ.series, test:(r,v)=>r.series===v},
+    {id:'se', title:'제품군', opts:M_SERIES.map(l=>[l,seName(l)]), common:FREQ.series, test:(r,v)=>r.series===v},
     {id:'lu', title:'라인업', opts:M_LINEUPS.map(l=>[l,luName(l)]), common:[...FREQ.lineup,...FREQ.idu], test:(r,v)=>r.lineup===v},
     {id:'n', title:'구성 (DVM S2)', single:true, num:true, opts:[[1,'단품'],[2,'2대 조합'],[3,'3대 조합'],[4,'4대 조합']], test:(r,v)=>r.unit==='odu' && r.module_count===v},
     {id:'v', title:'전원', single:true, num:true, opts:[[220,'1Φ 220V'],[380,'3Φ 4선 380V'],[460,'3Φ 3선 460V (공장전원)']], test:(r,v)=>r.power_voltage_v===v},
@@ -889,11 +893,11 @@ const MULTI = {
   isIdu:r=>r.unit==='idu',
   hero(r){
     const co=r.system==='cooling_only';
-    if(r.unit==='idu') return `<div class="models"><span>${esc(r.kind_ko||'실내기')}</span><b>${esc(r.model)}</b><span>제품군</span><b>${esc(r.series)}</b></div>
+    if(r.unit==='idu') return `<div class="models"><span>${esc(r.kind_ko||'실내기')}</span><b>${esc(r.model)}</b><span>제품군</span><b>${esc(seName(r.series))}</b></div>
       <div class="big">${r.hero_big?r.hero_big.map(([l,v,u],i)=>`<div${i?'':' class="c"'}><small>${esc(l)}</small><b>${esc(v)}${u?`<em>${esc(u)}</em>`:''}</b></div>`).join(''):r.airflow_cmh?`<div class="c"><small>환기량</small><b>${r.airflow_cmh}<em>CMH</em></b></div><div><small>소비전력</small><b>${fmt(r.power_cooling_w)}<em>W</em></b></div>`
         :`<div class="c"><small>냉방 정격</small><b>${r.cooling_capacity_kw!=null?fmtKw(r.cooling_capacity_kw)+'<em>kW</em>':'—'}</b></div><div class="h"><small>난방 정격</small><b>${r.heating_capacity_kw?fmtKw(r.heating_capacity_kw)+'<em>kW</em>':'—'}</b></div>`}</div>
       <div class="tags">${mTags(r)}</div>`;
-    return `<div class="models"><span>실외기</span><b>${esc(r.model)}</b><span>마력</span><b>${r.hp} HP</b><span>제품군</span><b>${esc(r.series)}</b></div>
+    return `<div class="models"><span>실외기</span><b>${esc(r.model)}</b><span>마력</span><b>${r.hp} HP</b><span>제품군</span><b>${esc(seName(r.series))}</b></div>
       <div class="big"><div class="c"><small>냉방 정격</small><b>${fmtKw(r.cooling_capacity_kw)}<em>kW</em></b></div>
       <div class="h"><small>난방 정격</small><b>${co?'—':fmtKw(r.heating_capacity_kw)}${co?'':'<em>kW</em>'}</b></div></div>
       <div class="tags">${mTags(r)}</div>`;
@@ -1634,6 +1638,7 @@ $('#info-done').onclick = closeSheet;
 
 /* ================= 업데이트 내역 ================= */
 const CHANGELOG = [
+  {v:'v2.13', d:'2026-10-20', t:['제품군 이름을 바꿨어요: DVM S Mini → DVM S Compact, DVM S Eco → DVM S Renewal','빠른 메뉴 \'자주 쓰는 실외기\'에 리뉴얼·컴팩트를 고정하고 S Eco·HOME은 뺐어요','\'리뉴얼\'으로 검색해도 찾아져요 (미니·에코 검색어도 그대로 돼요)']},
   {v:'v2.12', d:'2026-10-18', t:['업데이트 내용(v2.11)에서 잠금 화면 설명 문구를 정리했어요']},
   {v:'v2.11', d:'2026-10-16', t:['앱을 열면 비밀번호를 먼저 물어요. 한 번 열면 3시간 동안 다시 묻지 않고, 빠른 메뉴 맨 아래 \'지금 잠그기\'로 바로 잠글 수 있어요']},
   {v:'v2.10', d:'2026-10-16', t:['이전 모델은 필터·빠른 메뉴로 둘러볼 때는 나오지 않아요. 검색창에 검색하거나 \'이전 모델\'을 눌렀을 때만 보여요 (메뉴·필터의 숫자도 이전 모델을 뺀 값이에요). 즐겨찾기만 볼 때는 이전 모델도 보여요']},
@@ -1794,7 +1799,7 @@ const cntOf = (data,fn)=>data.reduce((n,r)=>n+(!r.discontinued&&!r.legacy&&fn(r)
 function drawerHtml(){
   const O=DATA_M.filter(r=>r.unit==='odu');
   const act=(mode,spec)=>`data-go='${JSON.stringify({m:mode,s:spec}).replace(/'/g,'&#39;')}'`;
-  const quick=[['S2 프라임',{se:['DVM S2'],lu:['프라임']}],['S2 표준형',{se:['DVM S2'],lu:['표준형']}],['S2 프레스티지',{se:['DVM S2'],lu:['프레스티지']}],['S2 냉방전용',{se:['DVM S2'],lu:['냉방전용']}],['S Eco',{se:['DVM S Eco']}],['HOME',{se:['DVM HOME']}]]
+  const quick=[['S2 프라임',{se:['DVM S2'],lu:['프라임']}],['S2 표준형',{se:['DVM S2'],lu:['표준형']}],['S2 프레스티지',{se:['DVM S2'],lu:['프레스티지']}],['S2 냉방전용',{se:['DVM S2'],lu:['냉방전용']}],['리뉴얼',{se:['DVM S Eco']}],['컴팩트',{se:['DVM S Mini']}]]
     .map(([t,sp])=>`<button class="dr-pill" ${act('m',sp)}>${esc(t)}<span class="n">${cntOf(O,r=>(!sp.se||sp.se.includes(r.series))&&(!sp.lu||sp.lu.includes(r.lineup)))}</span></button>`).join('');
   const chev='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 5l7 7-7 7"/></svg>';
   const kinds=[['o','멀티 실외기',cntOf(DATA_M,r=>r.unit==='odu')],['i','멀티 실내기',cntOf(DATA_M,r=>r.unit==='idu'&&!r.etc)],['s','싱글',cntOf(DATA_S,()=>true)],['e','기타 제품',cntOf(DATA_M,r=>!!r.etc)]]
@@ -1811,9 +1816,9 @@ function drawerSub(k){
   if(k==='o'){
     title='멀티 실외기'; const g={};
     DATA_M.filter(r=>r.unit==='odu'&&!r.discontinued&&!r.legacy).forEach(r=>{ const key=r.series+'|'+r.lineup; (g[key]=g[key]||{se:r.series,lu:r.lineup,n:0}).n++; });
-    const PRI=[['DVM S2','프라임'],['DVM S2','표준형'],['DVM S2','프레스티지'],['DVM S2','냉방전용'],['DVM S Eco','DVM S Eco'],['DVM HOME','DVM HOME 단배관'],['DVM HOME','DVM HOME 다배관']];
+    const PRI=[['DVM S2','프라임'],['DVM S2','표준형'],['DVM S2','프레스티지'],['DVM S2','냉방전용'],['DVM S Eco','DVM S Eco'],['DVM S Mini','DVM S Mini'],['DVM HOME','DVM HOME 단배관'],['DVM HOME','DVM HOME 다배관']];
     const rank=o=>{ const i=PRI.findIndex(p=>p[0]===o.se&&p[1]===o.lu); return i<0?99:i; };
-    list=Object.values(g).sort((a,b)=>rank(a)-rank(b)||b.n-a.n).map(o=>[(o.lu.startsWith(o.se)?o.lu:`${o.se.replace('DVM ','')} · ${o.lu}`),'m',{se:[o.se],lu:[o.lu]},o.n]);
+    list=Object.values(g).sort((a,b)=>rank(a)-rank(b)||b.n-a.n).map(o=>[(o.lu.startsWith(o.se)?luName(o.lu):`${seName(o.se).replace('DVM ','')} · ${luName(o.lu)}`),'m',{se:[o.se],lu:[o.lu]},o.n]);
     all=['전체 보기','m',{cat:'odu'},cntOf(DATA_M,r=>r.unit==='odu')];
   } else if(k==='i'){
     title='멀티 실내기'; const g={};
