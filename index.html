@@ -632,7 +632,7 @@ function newFolder(name){
 }
 
 /* ================= v1.0 공통 ================= */
-const APP_VERSION = '2.16', DATA_DATE = '2026-10-01';
+const APP_VERSION = '2.17', DATA_DATE = '2026-10-01';
 let CMP = [];
 const srcTag = r => r.source_kind==='catalog2018' ? '카탈로그 2018' : r.source_kind==='catalog' ? '카탈로그' : r.source_kind==='xls' ? (/^DVM Pro/.test(r.source_doc||'') ? 'DVM Pro 2.0' : '사양서') : 'TDB';
 const heroOf = (r,mode)=>{ let h=mode.hero(r); const t=(r.discontinued?`<span class="tag stop">${esc(r.discontinued)}</span>`:'')+(r.legacy?'<span class="tag old">이전 모델</span>':''); if(t) h=h.replace('<div class="tags">',`<div class="tags">${t}`); return h; };
@@ -1644,7 +1644,7 @@ $('#pdf-save').onclick = ()=>{
 
 /* ================= 정보 ================= */
 /* 냉방부하 계산 (개략치) */
-const LD_USE = [['사무실',150],['회의실',200],['상점·매장',200],['음식점(홀)',250],['주방',350],['카페',230],['은행·관공서',180],['병원(진료실·병실)',170],['교실·학원',200],['주택·거실',120],['숙박(객실)',130],['체육시설',220],['전산실 (장비 발열 별도)',400]];
+const LD_USE = [['일반',180],['사무실',150],['회의실',200],['상점·매장',200],['음식점(홀)',250],['주방',350],['카페',230],['은행·관공서',180],['병원(진료실·병실)',170],['교실·학원',200],['주택·거실',120],['숙박(객실)',130],['체육시설',220],['전산실 (장비 발열 별도)',400]];
 const LD_TYPES = [['4-WAY 카세트','WindFree 4Way 카세트',/BN4DBH1$/],['360 카세트','360 카세트',/BN6PBH1$/],['1-WAY 카세트','WindFree 1Way 카세트',/BN1PBH\d$/],['2-WAY 카세트','2Way 카세트',/CN2DBH1$/]];
 const ldKcal = r => r.model==='AM016BN1PBH2' ? 1376 : Math.round(r.cooling_capacity_kw*86)*10;
 function ldModels(t){
@@ -1699,6 +1699,7 @@ $('#info-done').onclick = closeSheet;
 
 /* ================= 업데이트 내역 ================= */
 const CHANGELOG = [
+  {v:'v2.17', d:'2026-11-09', t:['냉방부하 계산에서 용도를 따로 고르지 않으면 \'일반\' 180 kcal/h·m²로 계산해요']},
   {v:'v2.16', d:'2026-11-02', t:['빠른 메뉴 맨 아래에 \'냉방부하 계산\'을 추가했어요. 용도와 면적(m²)을 넣으면 필요한 냉방부하와 실내기 모델·대수를 바로 알려줘요 (4-WAY·360·1-WAY·2-WAY 카세트)']},
   {v:'v2.15', d:'2026-10-26', t:['AM050TXMDBH1을 이전 모델에서 빼고 DVM S Compact로 옮겼어요']},
   {v:'v2.14', d:'2026-10-20', t:['일부 실외기 상세에 나오던 \'사양서에 시리즈 표기가 없어…\' 안내 문구를 없앴어요']},
