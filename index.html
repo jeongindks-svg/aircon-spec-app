@@ -247,6 +247,13 @@ details.miss{margin:14px 4px 0;font-size:13px;color:var(--muted)}
 details.miss summary{cursor:pointer}
 details.miss p{margin:6px 0 0;line-height:1.6}
 .info-btn{color:var(--muted);font-size:12px;text-decoration:underline;padding:8px}
+.ld-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin:10px 0}
+.ld-form label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--muted)}
+.ld-form input,.ld-form select{width:100%;box-sizing:border-box;height:42px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font:inherit;font-size:15px;color:var(--ink);background:var(--surface);min-width:0}
+.ld-res{border-top:1px solid var(--line);margin-top:6px;padding-top:6px}
+.ld-badge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:13px;font-weight:600}
+.ld-badge.ok{background:#DDF1E4;color:#14673A}.ld-badge.no{background:#FBE3DC;color:#A5391B}
+.ld-note{font-size:12.5px;color:var(--muted);margin:8px 0 0;line-height:1.5}
 .info-row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
 .info-row:first-of-type{border-top:0}
 .info-row b{font-weight:600}
@@ -356,7 +363,7 @@ details.rest .opts{margin-top:6px}
 .dr-foot{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;border-top:1px solid var(--line);padding:8px 8px 2px;flex:none}
 .dr-foot button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;color:var(--muted);padding:6px 2px;border-radius:10px}
 .dr-foot button:hover{background:var(--bg)}
-.dr-foot2{display:flex;justify-content:center;gap:18px;padding:2px 8px calc(10px + env(safe-area-inset-bottom,0px));font-size:12.5px;color:var(--muted);flex:none}
+.dr-foot2{display:flex;justify-content:center;gap:12px;padding:2px 8px calc(10px + env(safe-area-inset-bottom,0px));font-size:12.5px;color:var(--muted);flex:none}
 .dr-foot2 button{padding:6px 4px;text-decoration:underline;text-underline-offset:3px}
 .dr-panel{position:absolute;inset:0;background:var(--surface);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .2s ease;visibility:hidden;padding-top:env(safe-area-inset-top,0px);z-index:2}
 .dr-panel.on{transform:none;visibility:visible}
@@ -486,7 +493,7 @@ html.locked #lock{display:flex;position:fixed;inset:0;z-index:100;background:var
     <button data-go='{"m":"a","s":{"cat":"legacy"}}'><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>이전 모델</button>
     <button data-go='{"m":"a","s":{"cat":"disc"}}'><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M8 8l8 8"/></svg>생산단종</button>
   </div>
-  <div class="dr-foot2"><button data-go='{"m":"__upd","s":{}}'>업데이트 내역</button><button data-go='{"m":"__info","s":{}}'>정보·출처</button><button data-go='{"m":"__lock","s":{}}'>지금 잠그기</button></div>
+  <div class="dr-foot2"><button data-go='{"m":"__upd","s":{}}'>업데이트 내역</button><button data-go='{"m":"__info","s":{}}'>정보·출처</button><button data-go='{"m":"__load","s":{}}'>냉방부하 계산</button><button data-go='{"m":"__lock","s":{}}'>지금 잠그기</button></div>
   <div class="dr-panel" id="dr-panel" aria-hidden="true"></div>
 </nav>
 <div class="sheet" id="fsheet" role="dialog" aria-modal="true" aria-labelledby="fsheet-t">
@@ -553,6 +560,20 @@ html.locked #lock{display:flex;position:fixed;inset:0;z-index:100;background:var
   <div id="upd-body"></div>
   <div class="actions"><button class="primary" id="upd-done">닫기</button></div>
 </div>
+<div class="sheet" id="loadsheet" role="dialog" aria-modal="true" aria-labelledby="loadsheet-t">
+  <div class="grab"></div>
+  <h2 id="loadsheet-t">냉방부하 계산</h2>
+  <div class="ld-form">
+    <label>용도<select id="ld-use"></select></label>
+    <label>면적 (m²)<input id="ld-area" type="number" inputmode="decimal" min="0" placeholder="예: 120"></label>
+    <label>장비 타입<select id="ld-type"></select></label>
+    <label>대수 (비우면 자동)<input id="ld-n" type="number" inputmode="numeric" min="1" placeholder="자동"></label>
+    <label>원단위 직접 입력<input id="ld-unit" type="number" inputmode="decimal" min="0" placeholder="kcal/h·m²"></label>
+    <label>안전율<input id="ld-sf" type="number" inputmode="decimal" min="0.5" step="0.05" value="1.0"></label>
+  </div>
+  <div id="ld-body" class="ld-res"></div>
+  <div class="actions"><button class="primary" id="ld-done">닫기</button></div>
+</div>
 <div class="sheet" id="infosheet" role="dialog" aria-modal="true" aria-labelledby="infosheet-t">
   <div class="grab"></div>
   <h2 id="infosheet-t">정보</h2>
@@ -611,7 +632,7 @@ function newFolder(name){
 }
 
 /* ================= v1.0 공통 ================= */
-const APP_VERSION = '2.15', DATA_DATE = '2026-10-01';
+const APP_VERSION = '2.16', DATA_DATE = '2026-10-01';
 let CMP = [];
 const srcTag = r => r.source_kind==='catalog2018' ? '카탈로그 2018' : r.source_kind==='catalog' ? '카탈로그' : r.source_kind==='xls' ? (/^DVM Pro/.test(r.source_doc||'') ? 'DVM Pro 2.0' : '사양서') : 'TDB';
 const heroOf = (r,mode)=>{ let h=mode.hero(r); const t=(r.discontinued?`<span class="tag stop">${esc(r.discontinued)}</span>`:'')+(r.legacy?'<span class="tag old">이전 모델</span>':''); if(t) h=h.replace('<div class="tags">',`<div class="tags">${t}`); return h; };
@@ -1191,7 +1212,7 @@ function renderRecent(){
   box.innerHTML='<span class="lb">최근 본</span>'+items.map(r=>`<button class="chip" data-recent="${esc(r._id)}">${esc((r._id.startsWith('m:')?MULTI:SINGLE).title(r))}</button>`).join('');
 }
 $('#recent').addEventListener('click',e=>{ const b=e.target.closest('[data-recent]'); if(!b) return; const r=ALL.find(x=>x._id===b.dataset.recent); if(r) openDetail(r); });
-const SHEETS = ['#fsheet','#favsheet','#mgsheet','#infosheet','#pdfsheet','#updsheet','#scsheet'];
+const SHEETS = ['#fsheet','#favsheet','#mgsheet','#infosheet','#pdfsheet','#updsheet','#scsheet','#loadsheet'];
 function openSheet(){ fOpen=(M.groups[0]||{}).id||null; fMore={}; fSearch={}; renderFilter(); $('#scrim').classList.add('on'); $('#fsheet').classList.add('on'); }
 function closeSheet(){ $('#scrim').classList.remove('on'); SHEETS.forEach(x=>$(x).classList.remove('on')); }
 const anySheet = ()=> SHEETS.some(x=>$(x).classList.contains('on'));
@@ -1622,6 +1643,46 @@ $('#pdf-save').onclick = ()=>{
 };
 
 /* ================= 정보 ================= */
+/* 냉방부하 계산 (개략치) */
+const LD_USE = [['사무실',150],['회의실',200],['상점·매장',200],['음식점(홀)',250],['주방',350],['카페',230],['은행·관공서',180],['병원(진료실·병실)',170],['교실·학원',200],['주택·거실',120],['숙박(객실)',130],['체육시설',220],['전산실 (장비 발열 별도)',400]];
+const LD_TYPES = [['4-WAY 카세트','WindFree 4Way 카세트',/BN4DBH1$/],['360 카세트','360 카세트',/BN6PBH1$/],['1-WAY 카세트','WindFree 1Way 카세트',/BN1PBH\d$/],['2-WAY 카세트','2Way 카세트',/CN2DBH1$/]];
+const ldKcal = r => r.model==='AM016BN1PBH2' ? 1376 : Math.round(r.cooling_capacity_kw*86)*10;
+function ldModels(t){
+  const seen=new Set(), out=[];
+  DATA_M.concat(DATA_I).filter(r=>r.unit==='idu'&&!r.etc&&!r.legacy&&!r.discontinued&&r.lineup===t[1]&&r.cooling_capacity_kw&&t[2].test(r.model))
+    .map(r=>({m:r.model,k:ldKcal(r)})).sort((a,b)=>a.k-b.k||a.m.localeCompare(b.m))
+    .forEach(x=>{ if(!seen.has(x.k)){ seen.add(x.k); out.push(x); } });
+  return out;
+}
+function ldCalc(){
+  const A=parseFloat($('#ld-area').value), body=$('#ld-body');
+  const ti=+$('#ld-type').value, typeName=LD_TYPES[ti][0];
+  if(!(A>0)){ body.innerHTML='<p class="ld-note">용도와 면적을 넣으면 바로 계산돼요. 장비 타입은 안 고르면 4-WAY 카세트 기준이에요.</p>'; return; }
+  const manual=parseFloat($('#ld-unit').value), unit=manual>0?manual:LD_USE[+$('#ld-use').value][1];
+  const sf=parseFloat($('#ld-sf').value)>0?parseFloat($('#ld-sf').value):1;
+  const list=ldModels(LD_TYPES[ti]); if(!list.length){ body.innerHTML='<p class="ld-note">이 타입의 모델이 없어요.</p>'; return; }
+  const load=A*unit*sf, maxK=list[list.length-1].k;
+  const nIn=parseInt($('#ld-n').value), n=nIn>0?nIn:Math.max(1,Math.ceil(load/maxK)), per=load/n;
+  const pick=list.find(x=>x.k>=per), capable=!!pick, sel=pick||list[list.length-1];
+  const total=sel.k*n, margin=total/load-1, ok=capable&&margin>=0;
+  const f=v=>Math.round(v).toLocaleString('ko-KR'), row=(a,b)=>`<div class="info-row"><span>${a}</span><b>${b}</b></div>`;
+  body.innerHTML = row('평 환산',`${(A/3.3058).toFixed(1)}평`)+row('적용 원단위',`${unit} kcal/h·m²${manual>0?' (직접 입력)':''}`)+
+    row('필요 냉방부하',`${f(load)} kcal/h`)+row('실내기 대수',`${n}대${nIn>0?' (지정)':' (자동)'}`)+row('대당 필요능력',`${f(per)} kcal/h`)+
+    row('선택 모델',`${esc(sel.m)} · ${f(sel.k)} kcal/h`)+row('총 냉방능력',`${f(total)} kcal/h`)+
+    row('실별 적용 냉방부하',`${f(total/A)} kcal/h·m²`)+row('여유율',`${(margin*100).toFixed(1)}%`)+
+    row('판정',ok?'<span class="ld-badge ok">적정</span>':'<span class="ld-badge no">용량부족 (대수 증가 또는 상위 모델)</span>')+
+    `<p class="ld-note">${nIn>0?'':'대수는 필요부하 ÷ 타입 최대용량(올림)으로 계산했어요. '}${$('#ld-type').dataset.touched?'':'장비 타입을 고르지 않아 4-WAY 카세트 기준으로 계산했어요. '}원단위는 개략치라 방위·단열·재실인원·조명에 따라 달라져요. 현장 조건에 맞게 확인해 주세요.</p>`;
+}
+function openLoad(){
+  if(!$('#ld-use').options.length){
+    $('#ld-use').innerHTML=LD_USE.map((u,i)=>`<option value="${i}">${esc(u[0])} (${u[1]})</option>`).join('');
+    $('#ld-type').innerHTML=LD_TYPES.map((t,i)=>`<option value="${i}">${esc(t[0])}</option>`).join('');
+    $('#ld-type').addEventListener('change',()=>{ $('#ld-type').dataset.touched='1'; });
+    ['#ld-use','#ld-area','#ld-type','#ld-n','#ld-unit','#ld-sf'].forEach(q=>{ $(q).addEventListener('input',ldCalc); $(q).addEventListener('change',ldCalc); });
+    $('#ld-done').onclick = closeSheet;
+  }
+  ldCalc(); $('#scrim').classList.add('on'); $('#loadsheet').classList.add('on');
+}
 function openInfo(){
   const by={}; const add=r=>{ const k=srcTag(r); by[k]=(by[k]||0)+1; };
   DATA_S.forEach(add); DATA_M.forEach(add);
@@ -1638,6 +1699,7 @@ $('#info-done').onclick = closeSheet;
 
 /* ================= 업데이트 내역 ================= */
 const CHANGELOG = [
+  {v:'v2.16', d:'2026-11-02', t:['빠른 메뉴 맨 아래에 \'냉방부하 계산\'을 추가했어요. 용도와 면적(m²)을 넣으면 필요한 냉방부하와 실내기 모델·대수를 바로 알려줘요 (4-WAY·360·1-WAY·2-WAY 카세트)']},
   {v:'v2.15', d:'2026-10-26', t:['AM050TXMDBH1을 이전 모델에서 빼고 DVM S Compact로 옮겼어요']},
   {v:'v2.14', d:'2026-10-20', t:['일부 실외기 상세에 나오던 \'사양서에 시리즈 표기가 없어…\' 안내 문구를 없앴어요']},
   {v:'v2.13', d:'2026-10-20', t:['제품군 이름을 바꿨어요: DVM S Mini → DVM S Compact, DVM S Eco → DVM S Renewal','빠른 메뉴 \'자주 쓰는 실외기\'에 리뉴얼·컴팩트를 고정하고 S Eco·HOME은 뺐어요','\'리뉴얼\'으로 검색해도 찾아져요 (미니·에코 검색어도 그대로 돼요)']},
@@ -1866,6 +1928,7 @@ $('#drawer').addEventListener('click',e=>{
   if(m==='__fav'){ closeDrawer(); M.state.favOnly=true; render(); window.scrollTo(0,0); }
   else if(m==='__upd'){ closeDrawer(); openUpd(); }
   else if(m==='__info'){ closeDrawer(); openInfo(); }
+  else if(m==='__load'){ closeDrawer(); openLoad(); }
   else if(m==='__acc'){ closeDrawer(); accOpen(); }
   else if(m==='__lock'){ closeDrawer(); window.lockNow&&window.lockNow(); }
   else goFilter(m,s);
